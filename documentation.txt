@@ -1,0 +1,226 @@
+
+  ---------- EASY-BIND - Easy local binding for Common Lisp ----------
+
+
+ Version 1.0
+ Copyright (C) Marius Gaarde 2018. All rights reserved. Licensed under the MIT license.
+
+ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+ AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+
+
+------- OVERVIEW -------
+
+Easy-bind is a collection of macros that make the binding of local variables, functions and macros 
+in Common Lisp more convenient. In particular it reduces/automates the nesting resulting from the 
+combined use of let/let* forms with other binding forms like destructuring-bind, multiple-value-
+bind and flet/labels/macrolet. It adopts the "paren-free" equational syntax for binding local 
+variables from the loop facility, and generalizes it to a simple domain-specific language for local 
+binding.
+
+
+------- BINDING CONSTRUCTS -------
+
+Easy-bind provides the macros let+, multi-let, letfun, letcond, macrolet+ and symbol-macrolet+ for
+binding local variables, functions and macros.
+
+Example usage can be seen in the file easy-bind-test.lisp.
+
+Easy-Bind's binding constructs adopt the syntax of local bindings used in Common Lisp's loop facility.
+These bindings have two basic forms:
+
+	    <var> = <expr>
+	   <list> = <list>
+	
+where the first form ("simple binding") binds a single variable to the value of <expr>, while the second 
+form ("complex binding") destructures a list structure and binds a list of variables. Example:
+
+     (loop for j below 1 with x = 5
+     	   	         and (y . z) = '(1 2 3) do
+	   	    (format t "x = ~d y = ~d z = ~d~%" x y z))
+		    
+prints "x = 5 y = 1 z = (2 3)". Easy-bind adopts the two basic forms "simple-binding" and "complex-binding"
+using the equals sign (as in loop, := and = are synonyms - = is used in the following examples). It does not 
+use any of the other "syntactic keywords" used in the loop facility, such as "with", "and" or "do". The body 
+of the form is understood to begin after the last binding.
+
+The binding constructs let+, multi-let, letfun and macrolet+ allow the free intermixing of simple and
+complex bindings. When only given simple bindings they macroexpand into a single let* form. When given
+no bindings, they expand into a progn. They differ in their interpretation of complex bindings.
+
+--- The individual forms ---
+
+LET+ combines the functionality of let/let* and destructuring-bind. It can be used as a general form
+for binding local variables when there is no need to bind multiple return values. It expands into let*
+and destructuring-bind forms, where let* forms are nested only as needed to preserve order of evaluation.
+
+    (let+ (x y z) = '(1 2 3)
+	     u = (+ x y)
+	     v = (+ y z)
+	     (a b c) = (list u v (* u v)) 
+	     (print a)
+	     (print b)
+	     (print c))
+
+macroexpands into:
+
+    (DESTRUCTURING-BIND
+        (X Y Z)
+        '(1 2 3)
+      (LET* ((U (+ X Y)) (V (+ Y Z)))
+        (DESTRUCTURING-BIND
+            (A B C)
+            (LIST U V (* U V))
+          (PRINT A)
+          (PRINT B)
+          (PRINT C))))
+
+and prints 3, 5 and 15. The left-hand-side of a complex binding allows everything destructuring-bind
+allows, such as &optional, &rest etc.
+
+MULTI-LET works like let+ except that complex bindings are used to bind multiple values rather than
+destructuring. Example:
+
+    (multi-let (a b) = (floor pi)
+   	p = (+ a b)
+	(x y) = (floor (exp 1))
+	e = (+ x y)
+        (expt e (* p (complex 0 1))))
+
+macroexpands into:
+
+   (MULTIPLE-VALUE-BIND (A B)
+       (FLOOR PI)
+     (LET* ((P (+ A B)))
+       (MULTIPLE-VALUE-BIND (X Y)
+           (FLOOR (EXP 1))
+         (LET* ((E (+ X Y)))
+           (EXPT E (* P (COMPLEX 0 1)))))))
+
+Since left-hand lists are used for binding multiple return values, it can not do destructuring.
+
+LETFUN combines the functionality of let* and labels. It uses left-hand lists to bind local functions.
+If only given complex bindings, it expands into a single labels form. Otherwise let* and labels forms
+will be nested as needed to preserve order of evaluation. 
+
+Example:
+
+    (letfun (square x) = (* x x)
+	     x = 1
+	     y = 2
+	     (y n) = (+ n 1)
+	     (fact n) = (case n
+			  (0 1)
+			  (t (* n (fact (1- n)))))
+	     n = (+ x y)
+	     (fact (square (y n))))
+
+macroexpands into:
+
+    (LABELS ((SQUARE (X)
+               (* X X)))
+      (LET* ((X 1) (Y 2))
+        (LABELS ((Y (N)
+                   (+ N 1))
+                 (FACT (N)
+                   (CASE N (0 1) (T (* N (FACT (1- N)))))))
+          (LET* ((N (+ X Y)))
+            (FACT (SQUARE (Y N)))))))
+
+Function bodies (right-hand sides) obtain an "implicit progn" by sequencing expressions in a list:
+
+    (letfun 
+	(verbose-square x) =
+	  ((format t "x = ~a~%" x)
+	   (format t "squaring ~a now...~%" x)
+	   (format t "soon done squaring ~a...~%" x)
+	   (format t "done! result = ~a~%" (* x x)))
+	x = 9
+	(verbose-square x))
+
+Note that this will obviously not work if the first expression is an atom - the right-hand side will
+then be interpreted as a single form. The same applies if the first form is a lambda form.
+
+Any lambda list that can be used with labels can be used:
+
+    (letfun (add &rest args) = (apply #'+ args)
+	     x = 7 y = 9
+	     (add x y))
+	     
+MACROLET+ works like letfun but expands into let* and macrolet forms. Example:
+
+    (macrolet+ (square x) =
+	         (let+ g = (gensym)
+		   `(let+ ,g = ,x
+		     (* ,g ,g)))
+	    x = 5
+	    (square x))
+		
+macroexpands to:
+
+    (MACROLET ((SQUARE (X)
+                 (LET+ G = (GENSYM) `(LET+ ,G = ,X (* ,G ,G)))))
+      (LET* ((X 5))
+        (SQUARE X)))
+	
+Any lambda list that can be used by macrolet can be used.
+
+SYMBOL-MACROLET+ expands into a single symbol-macrolet form. Example:
+
+    (symbol-macrolet+ x = (format t "Expanded x!~%")
+	      y = (format t "Expanded y!~%")
+	      x y)
+
+LETCOND is a conditional version of let+. It takes a form as its first argument, expected to be a list form,
+and matches its structure against the left-hand-sides of its remaining arguments. The left and right hand 
+sides of the remaining arguments must be separated by an arrow digraph (=>). The first left-hand side that 
+matches will be bound to the first argument form in a let+, and its right-hand side becomes the body of
+the let+ form.
+
+    (letcond '(1 (2 3))
+	 () => ()
+	 (x) => (list x)
+	 (x y) => (list x y)
+	 (x (y z)) => (list x y z))
+	 
+returns (1 (2 3)) because (x y) is the first alternative that matches the structure of '(1 (2 3)), causing 
+x to be bound to 1 and y to be bound to (2 3) before the code (list x y) is executed. If we remove the (x y) 
+alternative,
+
+    (letcond '(1 (2 3))
+	 () => ()
+	 (x) => (list x)
+	 (x (y z)) => (list x y z))
+
+returns (1 2 3) because the alternative (x (y z)) was the first match. Letcond is useful when writing recursive
+functions that operate on lists:
+
+    (qsort list) = (letcond list
+                    () => ()
+	            (p . xs) =>
+                      (nconc (qsort (remove-if (lambda (x) (> x p)) xs))
+			     (list p)
+			     (qsort (remove-if-not (lambda (x) (> x p)) xs))))
+			       
+    (count-list list) = (letcond list
+		         () => 0
+		         (head . tail) => ((declare (ignorable head))
+				           (+ 1 (count-list tail))))
+
+Note the "implicit progn" by sequencing forms in a list in the second example.
+
+--- Scope ---
+
+For all the above binding forms, every binding is in scope from the point where it is lexically defined
+until the binding form is closed. Binding expressions can always refer to variables/functions/macros bound
+above them (serial binding).
+
+Bindings can only occur before the body of the form.
+
+Note on declarations: Due to the fact that macroexpansion may create nested scopes, if the body contains 
+a declaration pertaining to variables bound in a complex binding, this complex binding should appear last
+in the series of bindings. If the declaration pertains to variables bound in simple bindings, these should 
+appear after the last complex binding.
