@@ -38,7 +38,7 @@
 
 (defun splice-implicit-progn (forms)
   (loop for i below (length forms) collect
-       (destructuring-bind (x . z) (nth i forms)
+       (let+ (x . z) = (nth i forms)
 	 (if (and (consp (car z))
 		  (consp (caar z))
 		  (not (eq (caaar z) 'lambda)))
@@ -49,6 +49,8 @@
   (or (atom x) (listp x)))
 
 (defmacro letcond (key-expr &body body)
+  "Conditionally expands into let+ form when list structure of key-expr
+matches left-hand side of binding form in body."
   (letcond-body-check-wellformedness body)
   (let+ cond-clauses = (parse-separated-list body 
 					     #'structure-p

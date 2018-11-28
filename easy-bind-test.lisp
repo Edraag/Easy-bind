@@ -56,71 +56,71 @@
 		   (when *verbose* (format t "working.~%"))
 		   (when *verbose* (format t "Should be the same: ~f ~f~%" e (exp 1))))
 	
-	(letfun n = 13
-	      (square x) = ((when *verbose* (format t "Squaring ~a, " x))
-			    (when *verbose* (format t "result = ~a ~%" (* x x)))
-			    (* x x))
-	      m = (square n)
-	      n = v
-	      (fact n) = (case n 
-			    (0 1)
-			    (t (* n (fact (1- n)))))
-	      (add &rest args) = (apply #'+ args)
-	      (f x) = (add x m)
-	      list = '(1 2 3 4 5 6 7 8 9 10)
-	      newlist = (mapcar #'f list)
+	(letfun    n = 13
+		   (square x) = ((when *verbose* (format t "Squaring ~a, " x))
+				 (when *verbose* (format t "result = ~a ~%" (* x x)))
+				 (* x x))
+		   m = (square n)
+		   n = v
+		   (fact n) = (case n 
+				(0 1)
+				(t (* n (fact (1- n)))))
+		   (add &rest args) = (apply #'+ args)
+		   (f x) = (add x m)
+		   list = '(1 2 3 4 5 6 7 8 9 10)
+		   newlist = (mapcar #'f list)
+		   
+		   (random-list n max) = (loop for i below n collect (random max))
+		   random-list = (random-list 20 100)
+		   (qsort list) = (letcond list
+				    () => ()
+				    (p . xs) =>
+				    (nconc (qsort (remove-if (lambda (x) (> x p)) xs))
+					   (list p)
+					   (qsort (remove-if-not (lambda (x) (> x p)) xs))))
 	      
-	      (random-list n max) = (loop for i below n collect (random max))
-	      random-list = (random-list 20 100)
-	      (qsort list) = (letcond list
-			       () => ()
-			       (p . xs) =>
-			       (nconc (qsort (remove-if (lambda (x) (> x p)) xs))
-				      (list p)
-				      (qsort (remove-if-not (lambda (x) (> x p)) xs))))
+		   sorted-list = (qsort random-list)
+		   (count-list list) = (letcond list
+					 () => 0
+					 (head . tail) => ((declare (ignorable head))
+							   (+ 1 (count-list tail))))
+		   length = (count-list sorted-list)
 	      
-	      sorted-list = (qsort random-list)
-	      (count-list list) = (letcond list
-				     () => 0
-				     (head . tail) => ((declare (ignorable head))
-						       (+ 1 (count-list tail))))
-	      length = (count-list sorted-list)
-	      
-	      closure = (letfun count  = 0
-			        (incr) = ((incf count)
-					  (when *verbose* 
-					    (format t "Closure: The count is now: ~a ~%" count))
-					  count)
-				#'incr)
-	      ;; Body of letfun starts here
-	      (assert (= (funcall closure) 1))
-	      (assert (= (funcall closure) 2))
-	      (assert (= (funcall closure) 3))
-	      (assert (= (nth 6 newlist) 176))
-	      (assert (= 120 (fact n)))
-	      (loop for i from 1 below (length sorted-list) do
-		   (assert (>= (elt sorted-list i)
-			       (elt sorted-list (- i 1)))))
-	      (when *verbose* (format t "sorted-list = ~a ~%" sorted-list))
-	      (assert (= length (length sorted-list)))
-	      (letfun (square x) = ((when *verbose* (format t "Inner square now...~%")
-					  (format t "Not actually squaring ~d...~%" x))
-				    x)
-		     (assert (= (square 2) 2))
-		     (assert (= x 60)))
-	      (assert (= (square 2) 4))
-	      (assert (= x 60))
-	      (when *verbose* (format t "Letfun seems "))
-	      (when *verbose* (format t "to be "))
-	      (when *verbose* (format t "working.~%")))
-	      
-	(macrolet+ s = z
+		   closure = (letfun count  = 0
+				     (incr) = ((incf count)
+					       (when *verbose* 
+						 (format t "Closure: The count is now: ~a ~%" count))
+					       count)
+				     #'incr)
+		   ;; Body of letfun starts here
+		   (assert (= (funcall closure) 1))
+		   (assert (= (funcall closure) 2))
+		   (assert (= (funcall closure) 3))
+		   (assert (= (nth 6 newlist) 176))
+		   (assert (= 120 (fact n)))
+		   (loop for i from 1 below (length sorted-list) do
+			(assert (>= (elt sorted-list i)
+				    (elt sorted-list (- i 1)))))
+		   (when *verbose* (format t "sorted-list = ~a ~%" sorted-list))
+		   (assert (= length (length sorted-list)))
+		   (letfun (square x) = ((when *verbose* (format t "Inner square now...~%")
+					       (format t "Not actually squaring ~d...~%" x))
+					 x)
+			   (assert (= (square 2) 2))
+			   (assert (= x 60)))
+		   (assert (= (square 2) 4))
+		   (assert (= x 60))
+		   (when *verbose* (format t "Letfun seems "))
+		   (when *verbose* (format t "to be "))
+		   (when *verbose* (format t "working.~%")))
+	
+	(letmacro  s = z
 		   (macro-square x) =
 		   (let+ g = (gensym)
 			 `(let+ ,g = ,x
 				(* ,g ,g)))
 		   (macro-add &rest args) = ((format nil "Going to add up some args...")
-					     (format nil "No one will read this..." )
+					     (format nil "This will not be printed..." )
 					     `(+ ,@args))
 		   x = 5
 		   y = (macro-square (macro-add x s))
@@ -134,31 +134,36 @@
 				 ,store-expr))
 		   w = (zap #'+ x 5)
 		   z = (zap #'* w 5)
-		   ;; Body of macrolet+ starts here
+		   ;; Body of letmacro starts here
 		   (assert (= 50 z))
 		   (assert (= 7225 y))
-		   (when *verbose* (format t "Macrolet+ seems "))
+		   (when *verbose* (format t "Letmacro seems "))
 		   (when *verbose* (format t "to be "))
 		   (when *verbose* (format t "working.~%")))
 	
-	(symbol-macrolet+ x = (when *verbose* (format t "x expanded.~%"))
+	(letsym    x = (when *verbose* (format t "x expanded.~%"))
 		   y = (when *verbose* (format t "y expanded.~%"))
 		   z = (when *verbose* (format t "z expanded.~%"))
+		   a = 8 b = 9
+		   sum = (+ a b)
+		   avg = (/ sum 2)
+		   ;; Body of letsym starts here
 		   x y z
-		   ;; Body of symbol-macrolet+ starts here
-		   (when *verbose* (format t "Symbol-macrolet+ seems "))
+		   (assert (= 17 sum))
+		   (assert (= 17/2 avg))
+		   (when *verbose* (format t "Letsym seems "))
 		   (when *verbose* (format t "to be "))
 		   (when *verbose* (format t "working if x, y, z expanded.~%" )))
 	
 	(assert (= x 60))
-	(let+ x = 42 
+	(let+ x = 42
 	      (assert (= x 42))
 	      (let+ x = 1
 		    (assert (= x 1)))
 	      (assert (= x 42)))
 	(assert (= x 60))
 	(when *verbose* (format t "Binding constructs working OK.~%" ))
-        T))
+        t))
 
 (defun test-easy-bind-silent ()
   (let+ *verbose* = nil

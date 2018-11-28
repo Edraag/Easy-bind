@@ -24,7 +24,7 @@ binding.
 
 ------- BINDING CONSTRUCTS -------
 
-Easy-bind provides the macros let+, multi-let, letfun, letcond, macrolet+ and symbol-macrolet+ for
+Easy-bind provides the macros let+, multi-let, letfun, letcond, letmacro and letsym for
 binding local variables, functions and macros.
 
 Example usage can be seen in the file easy-bind-test.lisp.
@@ -47,7 +47,7 @@ using the equals sign (as in loop, := and = are synonyms - = is used in the foll
 use any of the other "syntactic keywords" used in the loop facility, such as "with", "and" or "do". The body 
 of the form is understood to begin after the last binding.
 
-The binding constructs let+, multi-let, letfun and macrolet+ allow the free intermixing of simple and
+The binding constructs let+, multi-let, letfun and letmacro allow the free intermixing of simple and
 complex bindings. When only given simple bindings they macroexpand into a single let* form. When given
 no bindings, they expand into a progn. They differ in their interpretation of complex bindings.
 
@@ -150,9 +150,9 @@ Any lambda list that can be used with labels can be used:
 	     x = 7 y = 9
 	     (add x y))
 	     
-MACROLET+ works like letfun but expands into let* and macrolet forms. Example:
+LETMACRO works like letfun but expands into let* and macrolet forms. Example:
 
-    (macrolet+ (square x) =
+    (letmacro (square x) =
 	         (let+ g = (gensym)
 		   `(let+ ,g = ,x
 		     (* ,g ,g)))
@@ -168,11 +168,11 @@ macroexpands to:
 	
 Any lambda list that can be used by macrolet can be used.
 
-SYMBOL-MACROLET+ expands into a single symbol-macrolet form. Example:
+LETSYM expands into a single symbol-macrolet form. Example:
 
-    (symbol-macrolet+ x = (format t "Expanded x!~%")
-	      y = (format t "Expanded y!~%")
-	      x y)
+    (letsym x = (format t "Expanded x!~%")
+	    y = (format t "Expanded y!~%")
+	    x y)
 
 LETCOND is a conditional version of let+. It takes a form as its first argument, expected to be a list form,
 and matches its structure against the left-hand-sides of its remaining arguments. The left and right hand 
@@ -215,8 +215,9 @@ Note the "implicit progn" by sequencing forms in a list in the second example.
 --- Scope ---
 
 For all the above binding forms, every binding is in scope from the point where it is lexically defined
-until the binding form is closed. Binding expressions can always refer to variables/functions/macros bound
-above them (serial binding).
+until the binding form is closed (for letcond, the scope is obviously restricted to the associated conditional 
+branch). Binding expressions can always refer to variables/functions/macros bound above them within the 
+binding form (serial binding).
 
 Bindings can only occur before the body of the form.
 

@@ -24,6 +24,6 @@
   (:export :multi-let
 	   :let+
 	   :letfun
-	   :macrolet+
-	   :symbol-macrolet+
+	   :letmacro
+	   :letsym
 	   :letcond))

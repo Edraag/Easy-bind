@@ -90,7 +90,7 @@ as a, c, ... satisfies predicate."
   (collect-binding-list bindings #'simple-left-hand-side-p))
 
 (defun generate-lets-and-function-bindings (bindings body form-name)
-  "Used by letfun and macrolet+ to generate LET* and LABELS/MACROLET forms, nested as needed to 
+  "Used by letfun and letmacro to generate LET* and LABELS/MACROLET forms, nested as needed to 
 preserve order of evaluation.
 Form-name = CL form which expects function-like bindings."
   (labels ((recur (bindings body)
@@ -102,7 +102,7 @@ Form-name = CL form which expects function-like bindings."
 		      `((let* ,let-bindings
 			  ,@(recur (nthcdr count bindings) body)))))
 		   ; Extra level of parens needed because body must be spliced in at the end of the recursion,
-		   ; so nested let+ and <form-name> forms must also be spliced. Thus the outer fn returns the
+		   ; so nested let* and <form-name> forms must also be spliced. Thus the outer fn returns the
 		   ; car of the list.
 		   (t
 		    (let* ((function-bindings (generate-function-binding-list bindings))
@@ -135,7 +135,7 @@ Form-name = CL form which expects function-like bindings."
 		      `((let* ,let-bindings
 			  ,@(recur (nthcdr count bindings) body)))))
 		   ; Extra level of parens needed because body must be spliced in at the end of the recursion,
-		   ; so nested let+ and <binding-name> forms must also be spliced. Thus the outer fn returns the
+		   ; so nested let* and <binding-name> forms must also be spliced. Thus the outer fn returns the
 		   ; car of the list.
 		   (t
 		    `((,binding-name ,@(car bindings)
@@ -147,13 +147,13 @@ Form-name = CL form which expects function-like bindings."
   (generate-lets-and-<binding-name> bindings body 'multiple-value-bind))
 
 (defun generate-lets-and-destructuring-binds (bindings body)
-  "Used by lets to generate LET* and DESTRUCTURING-BIND forms."
+  "Used by let+ to generate LET* and DESTRUCTURING-BIND forms."
   (generate-lets-and-<binding-name> bindings body 'destructuring-bind))
 
 ;; ----------- Binding macros -----------
 
 (defmacro multi-let (&rest forms)
-  "Expands into LET* and MULTI-LETPLE-VALUE-BIND forms, LET*s nested if needed to preserve order of evaluation,
+  "Expands into LET* and MULTIPLE-VALUE-BIND forms, LET*s nested if needed to preserve order of evaluation,
 or a PROGN form if no bindings are given."
   (multiple-value-bind 
 	(bindings count) 
@@ -191,7 +191,7 @@ or a PROGN form if no bindings are given."
 	  `(progn ,@body)
 	  (generate-lets-and-labels bindings body)))))
 
-(defmacro macrolet+ (&rest forms)
+(defmacro letmacro (&rest forms)
   "Expands into LET* and MACROLET forms, nested if needed to preserve order of evaluation,
 or a PROGN form if no bindings are given."
   (multiple-value-bind 
@@ -204,7 +204,7 @@ or a PROGN form if no bindings are given."
 	  `(progn ,@body)
 	  (generate-lets-and-macrolets bindings body)))))
 
-(defmacro symbol-macrolet+ (&rest forms)
+(defmacro letsym (&rest forms)
   "Expands into a single SYMBOL-MACROLET form, or a PROGN if no bindings are given"
   (multiple-value-bind
 	(bindings count)
