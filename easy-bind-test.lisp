@@ -45,6 +45,16 @@
 	(when *verbose* (format t "working~%"))
 	(when *verbose* (format t "Should be the same: (5 . 6) and ~a and ~a~%" f (cons h j)))
 	
+	(let- u = v
+	      v = u
+	      x = y
+	      y = x
+	      (assert (= v 90))
+	      (assert (= u 5))
+	      (assert (= y 60))
+	      (assert (= x 70))
+	      (when *verbose* (format t "Let- seems to be working~%")))
+	
 	(multi-let (m n b) = (values x y z)
 		   (a1 a2) = (floor (exp 1))
 		   e = (+ a1 a2)
@@ -92,6 +102,18 @@
 						 (format t "Closure: The count is now: ~a ~%" count))
 					       count)
 				     #'incr)
+		   
+		   (letfun- (f x) = (* x 100)
+			    (g x) = (f x)
+			    (square x) = ((when *verbose* (format t "Another square function... ~%" ))
+					  (when *verbose* (format t "Squaring away... ~%" ))
+					  (when *verbose* (format t "(square ~a) = ~a ~%" x (* x x)))
+					  (* x x))
+			    (assert (= 300 (f 3)))
+			    (assert (= 170 (g 1)))
+			    (assert (= 25 (square n)))
+			    (when *verbose* (format t "Letfun- seems to be working~%")))
+		   
 		   ;; Body of letfun starts here
 		   (assert (= (funcall closure) 1))
 		   (assert (= (funcall closure) 2))

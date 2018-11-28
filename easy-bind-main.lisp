@@ -89,8 +89,17 @@ as a, c, ... satisfies predicate."
 (defun generate-let-binding-list (bindings)
   (collect-binding-list bindings #'simple-left-hand-side-p))
 
-(defun generate-lets-and-function-bindings (bindings body form-name)
-  "Used by letfun and letmacro to generate LET* and LABELS/MACROLET forms, nested as needed to 
+(defun function-bindings-splice-implicit-progn (bindings)
+  (loop for i below (length bindings) collect
+       (destructuring-bind (x y . z) (nth i bindings)
+	 (if (and (consp (car z))
+		  (consp (caar z))
+		  (not (eq (caaar z) 'lambda)))
+	     (list* x y (car z))
+	     (nth i bindings)))))
+
+(defun generate-let*s-and-function-bindings (bindings body form-name)
+  "Used by letfun and macrolet+ to generate LET* and LABELS/MACROLET forms, nested as needed to 
 preserve order of evaluation.
 Form-name = CL form which expects function-like bindings."
   (labels ((recur (bindings body)
@@ -107,24 +116,19 @@ Form-name = CL form which expects function-like bindings."
 		   (t
 		    (let* ((function-bindings (generate-function-binding-list bindings))
 			   (count (length function-bindings)))
-		      (loop for i below (length function-bindings) do
-			   (destructuring-bind (x y . z) (nth i function-bindings)
-			     (when (and (consp (car z))
-					(consp (caar z))
-					(not (eq (caaar z) 'lambda)))
-			       ; Splice in "implicit progn"
-			       (setf (nth i function-bindings) (list* x y (car z))))))
+		      (setf function-bindings
+			    (function-bindings-splice-implicit-progn function-bindings))
 		      `((,form-name ,function-bindings
 				    ,@(recur (nthcdr count bindings) body))))))))
     (car (recur bindings body))))
 
-(defun generate-lets-and-labels (bindings body)
-  (generate-lets-and-function-bindings bindings body 'labels))
+(defun generate-let*s-and-labels (bindings body)
+  (generate-let*s-and-function-bindings bindings body 'labels))
 
-(defun generate-lets-and-macrolets (bindings body)
-  (generate-lets-and-function-bindings bindings body 'macrolet))
+(defun generate-let*s-and-macrolets (bindings body)
+  (generate-let*s-and-function-bindings bindings body 'macrolet))
 
-(defun generate-lets-and-<binding-name> (bindings body binding-name)
+(defun generate-let*s-and-<binding-name> (bindings body binding-name)
   "Generates LET* forms and <binding-name> forms, LET* forms nested as needed to preserve order of evaluation."
   (labels ((recur (bindings body) 
 	     (cond ((null bindings)
@@ -142,13 +146,13 @@ Form-name = CL form which expects function-like bindings."
 				     ,@(recur (cdr bindings) body)))))))
     (car (recur bindings body))))
 
-(defun generate-lets-and-multiple-value-binds (bindings body)
+(defun generate-let*s-and-multiple-value-binds (bindings body)
   "Used by multi-let to generate LET* and MULTIPLE-VALUE-BIND forms."
-  (generate-lets-and-<binding-name> bindings body 'multiple-value-bind))
+  (generate-let*s-and-<binding-name> bindings body 'multiple-value-bind))
 
-(defun generate-lets-and-destructuring-binds (bindings body)
+(defun generate-let*s-and-destructuring-binds (bindings body)
   "Used by let+ to generate LET* and DESTRUCTURING-BIND forms."
-  (generate-lets-and-<binding-name> bindings body 'destructuring-bind))
+  (generate-let*s-and-<binding-name> bindings body 'destructuring-bind))
 
 ;; ----------- Binding macros -----------
 
@@ -163,7 +167,7 @@ or a PROGN form if no bindings are given."
     (let ((body (nthcdr count forms)))
       (if (null bindings)
 	  `(progn ,@body)
-	  (generate-lets-and-multiple-value-binds bindings body)))))
+	  (generate-let*s-and-multiple-value-binds bindings body)))))
 
 (defmacro let+ (&rest forms)
   "Expands into LET* and DESTRUCTURING-BIND forms, LET*s nested if needed to preserve order of evaluation,
@@ -176,7 +180,19 @@ or a PROGN form if no bindings are given."
     (let ((body (nthcdr count forms)))
       (if (null bindings)
 	  `(progn ,@body)
-	  (generate-lets-and-destructuring-binds bindings body)))))
+	  (generate-let*s-and-destructuring-binds bindings body)))))
+
+(defmacro let- (&rest forms)
+  "Expands into a single LET form, or a PROGN if no bindings are given"
+  (multiple-value-bind
+	(bindings count)
+      (parse-separated-list forms 
+			    #'simple-left-hand-side-p 
+			    #'equals-sign-p)
+    (let ((body (nthcdr count forms)))
+      (if (null bindings)
+	  `(progn ,@body)
+	  `(let ,bindings ,@body)))))
 
 (defmacro letfun (&rest forms)
   "Expands into LET* and LABELS forms, nested if needed to preserve order of evaluation,
@@ -189,7 +205,21 @@ or a PROGN form if no bindings are given."
     (let ((body (nthcdr count forms)))
       (if (null bindings)
 	  `(progn ,@body)
-	  (generate-lets-and-labels bindings body)))))
+	  (generate-let*s-and-labels bindings body)))))
+
+(defmacro letfun- (&rest forms)
+  "Expands into a single FLET form, or a PROGN if no bindings are given"
+  (multiple-value-bind
+	(bindings count)
+      (parse-separated-list forms 
+			    #'complex-left-hand-side-p 
+			    #'equals-sign-p)
+    (let ((body (nthcdr count forms)))
+      (if (null bindings)
+	  `(progn ,@body)
+	  `(flet ,(function-bindings-splice-implicit-progn
+		   (generate-function-binding-list bindings)) 
+	     ,@body)))))
 
 (defmacro letmacro (&rest forms)
   "Expands into LET* and MACROLET forms, nested if needed to preserve order of evaluation,
@@ -202,7 +232,7 @@ or a PROGN form if no bindings are given."
     (let ((body (nthcdr count forms)))
       (if (null bindings)
 	  `(progn ,@body)
-	  (generate-lets-and-macrolets bindings body)))))
+	  (generate-let*s-and-macrolets bindings body)))))
 
 (defmacro letsym (&rest forms)
   "Expands into a single SYMBOL-MACROLET form, or a PROGN if no bindings are given"

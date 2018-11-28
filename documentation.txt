@@ -24,8 +24,8 @@ binding.
 
 ------- BINDING CONSTRUCTS -------
 
-Easy-bind provides the macros let+, multi-let, letfun, letcond, letmacro and letsym for
-binding local variables, functions and macros.
+Easy-bind provides the macros let+, let-, multi-let, letfun, letfun-, letcond, letmacro and letsym
+for binding local variables, functions and macros.
 
 Example usage can be seen in the file easy-bind-test.lisp.
 
@@ -80,6 +80,16 @@ macroexpands into:
 
 and prints 3, 5 and 15. The left-hand-side of a complex binding allows everything destructuring-bind
 allows, such as &optional, &rest etc.
+
+LET- only accepts simple bindings and expands into a single let form. It differs from let+ in that it, like
+let, binds multiple variables in parallel:
+
+    (let+ x = 9 y = 5
+	(let- x = y
+	      y = x
+	  (format t "x = ~a, y = ~a~%" x y)))
+	  
+prints "x = 5, y = 9".
 
 MULTI-LET works like let+ except that complex bindings are used to bind multiple values rather than
 destructuring. Example:
@@ -150,6 +160,9 @@ Any lambda list that can be used with labels can be used:
 	     x = 7 y = 9
 	     (add x y))
 	     
+LETFUN- only accepts complex bindings and expands into a single flet form. It differs from letfun in 
+that it binds its local functions in parallel.
+
 LETMACRO works like letfun but expands into let* and macrolet forms. Example:
 
     (letmacro (square x) =
@@ -195,8 +208,8 @@ alternative,
 	 (x) => (list x)
 	 (x (y z)) => (list x y z))
 
-returns (1 2 3) because the alternative (x (y z)) was the first match. Letcond is useful when writing recursive
-functions that operate on lists:
+returns (1 2 3) because the alternative (x (y z)) was the first match. One use case for letcond is writing 
+recursive functions that operate on lists:
 
     (qsort list) = (letcond list
                     () => ()
@@ -214,12 +227,15 @@ Note the "implicit progn" by sequencing forms in a list in the second example.
 
 --- Scope ---
 
-For all the above binding forms, every binding is in scope from the point where it is lexically defined
-until the binding form is closed (for letcond, the scope is obviously restricted to the associated conditional 
-branch). Binding expressions can always refer to variables/functions/macros bound above them within the 
-binding form (serial binding).
+For the "serial" binding forms let+, multi-let, letfun, letmacro and letsym, every binding is lexically in scope 
+from the point where it is defined until the binding form is closed. Binding expressions can always refer to 
+variables/functions/macros bound above them within the binding form (serial binding).
 
-Bindings can only occur before the body of the form.
+Let- and letfun- bind in parallel, and the bindings are only in scope inside the body of the form. 
+
+For letcond, the scope is restricted to the associated conditional branch.
+
+Binding expressions can only occur before the body of the form.
 
 Note on declarations: Due to the fact that macroexpansion may create nested scopes, if the body contains 
 a declaration pertaining to variables bound in a complex binding, this complex binding should appear last

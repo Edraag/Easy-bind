@@ -23,7 +23,9 @@
   (:nicknames :easy-bind)
   (:export :multi-let
 	   :let+
+	   :let-
 	   :letfun
+	   :letfun-
 	   :letmacro
 	   :letsym
 	   :letcond))
