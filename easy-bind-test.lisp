@@ -177,10 +177,10 @@
 		   (when *verbose* (format t "to be "))
 		   (when *verbose* (format t "working if x, y, z expanded.~%" )))
 	
-	(let+      plist = '((:a 1) (:b 2) (:c 3))
+	(let+      alist = '((:a 1) (:b 2) (:c 3))
 		   tree  = '(+ (* 3 (+ 4 (/ 13 2)) 5) 14 (/ (- 23 (* 2 (+ 1 2))) 3))
-		   match =  (letmatch plist
-			      () => (error "~a not supposed to be empty!" plist)
+		   match =  (letmatch alist
+			      () => (error "~a not supposed to be empty!" alist)
 			      x  => ((when *verbose* (format t "matched x~%")) x)
 			      (x)       => ((when *verbose* (format t "matched (x)~%"))
 					    (list x))
@@ -189,8 +189,8 @@
 			      (x . y)   => ((when *verbose* (format t "matched (x . y)~%"))
 					    (list x y)))
 		   
-		   match2 = (letmatch plist
-			      () => (error "~a not supposed to be empty!" plist)
+		   match2 = (letmatch alist
+			      () => (error "~a not supposed to be empty!" alist)
 			      (x)       => ((when *verbose* (format t "matched (x)~%"))
 					    (list x))
 			      (x y)     => ((when *verbose* (format t "matched (x y)~%"))
