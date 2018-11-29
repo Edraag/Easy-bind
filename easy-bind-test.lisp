@@ -219,7 +219,7 @@
 		   (when *verbose* (format t "Letmatch seems to be working~%")))
 	
 	(assert (= x 60))
-	(let+ x = 42
+	(let- x = 42
 	      (assert (= x 42))
 	      (let+ x = 1
 		    (assert (= x 1)))
@@ -229,5 +229,5 @@
         t))
 
 (defun test-easy-bind-silent ()
-  (let+ *verbose* = nil
+  (let- *verbose* = nil
 	(test-easy-bind)))
