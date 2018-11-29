@@ -28,13 +28,13 @@
   (and (symbolp x)
        (string= (symbol-name x) "=>")))
 
-(defun letcond-body-check-wellformedness (forms)
+(defun letmatch-body-check-wellformedness (forms)
   (loop with count = 0
      for elt in forms do
        (progn (incf count)
 	      (when (and (multiple-of 3 (- count 2))
 			 (not (consequent-sign-p elt)))
-		(error "Malformed letcond expression - missing or misplaced => sign")))))
+		(error "Malformed letmatch expression - missing or misplaced => sign")))))
 
 (defun splice-implicit-progn (forms)
   (loop for i below (length forms) collect
@@ -48,10 +48,10 @@
 (defun structure-p (x)
   (or (atom x) (listp x)))
 
-(defmacro letcond (key-expr &body body)
+(defmacro letmatch (key-expr &body body)
   "Conditionally expands into let+ form when list structure of key-expr
 matches left-hand side of binding form in body."
-  (letcond-body-check-wellformedness body)
+  (letmatch-body-check-wellformedness body)
   (let+ cond-clauses = (parse-separated-list body 
 					     #'structure-p
 					     #'consequent-sign-p)

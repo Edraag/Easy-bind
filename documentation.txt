@@ -24,7 +24,7 @@ binding.
 
 ------- BINDING CONSTRUCTS -------
 
-Easy-bind provides the macros let+, let-, multi-let, letfun, letfun-, letcond, letmacro and letsym
+Easy-bind provides the macros let+, let-, multi-let, letfun, letfun-, letmatch, letmacro and letsym
 for binding local variables, functions and macros.
 
 Example usage can be seen in the file easy-bind-test.lisp.
@@ -187,13 +187,13 @@ LETSYM expands into a single symbol-macrolet form. Example:
 	    y = (format t "Expanded y!~%")
 	    x y)
 
-LETCOND is a conditional version of let+. It takes a form as its first argument, expected to be a list form,
+LETMATCH is a conditional version of let+. It takes a form as its first argument, expected to be a list form,
 and matches its structure against the left-hand-sides of its remaining arguments. The left and right hand 
-sides of the remaining arguments must be separated by an arrow digraph (=>). The first left-hand side that 
-matches will be bound to the first argument form in a let+, and its right-hand side becomes the body of
-the let+ form.
+sides of the remaining arguments must be separated by a "fat arrow" digraph (=>). The first left-hand side that 
+matches will be bound to the first argument form in a let+ (expanding into a let* or destructuring-bind),
+and its right-hand side becomes the body of the let+ form.
 
-    (letcond '(1 (2 3))
+    (letmatch '(1 (2 3))
 	 () => ()
 	 (x) => (list x)
 	 (x y) => (list x y)
@@ -203,22 +203,26 @@ returns (1 (2 3)) because (x y) is the first alternative that matches the struct
 x to be bound to 1 and y to be bound to (2 3) before the code (list x y) is executed. If we remove the (x y) 
 alternative,
 
-    (letcond '(1 (2 3))
+    (letmatch '(1 (2 3))
 	 () => ()
 	 (x) => (list x)
 	 (x (y z)) => (list x y z))
 
-returns (1 2 3) because the alternative (x (y z)) was the first match. One use case for letcond is writing 
-recursive functions that operate on lists:
+returns (1 2 3) because the alternative (x (y z)) was the first match. The rules for matching are: 1) A left-hand
+side must be a symbol or a literal list containing 0 or more symbols and/or other lists, where this rule applies 
+recursively for lists, 2) a symbol (except nil) matches anything, 3) the empty list only matches the empty list,
+4) a list matches a list if car matches car and cdr matches cdr. 
 
-    (qsort list) = (letcond list
+One use case for letmatch is writing recursive functions that operate on lists:
+
+    (qsort list) = (letmatch list
                     () => ()
 	            (p . xs) =>
                       (nconc (qsort (remove-if (lambda (x) (> x p)) xs))
 			     (list p)
 			     (qsort (remove-if-not (lambda (x) (> x p)) xs))))
 			       
-    (count-list list) = (letcond list
+    (count-list list) = (letmatch list
 		         () => 0
 		         (head . tail) => ((declare (ignorable head))
 				           (+ 1 (count-list tail))))
@@ -233,7 +237,7 @@ variables/functions/macros bound above them within the binding form (serial bind
 
 Let- and letfun- bind in parallel, and the bindings are only in scope inside the body of the form. 
 
-For letcond, the scope is restricted to the associated conditional branch.
+For letmatch, the scope is restricted to the associated conditional branch.
 
 Binding expressions can only occur before the body of the form.
 

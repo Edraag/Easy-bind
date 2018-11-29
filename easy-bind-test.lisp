@@ -82,7 +82,7 @@
 		   
 		   (random-list n max) = (loop for i below n collect (random max))
 		   random-list = (random-list 20 100)
-		   (qsort list) = (letcond list
+		   (qsort list) = (letmatch list
 				    () => ()
 				    (p . xs) =>
 				    (nconc (qsort (remove-if (lambda (x) (> x p)) xs))
@@ -90,7 +90,7 @@
 					   (qsort (remove-if-not (lambda (x) (> x p)) xs))))
 	      
 		   sorted-list = (qsort random-list)
-		   (count-list list) = (letcond list
+		   (count-list list) = (letmatch list
 					 () => 0
 					 (head . tail) => ((declare (ignorable head))
 							   (+ 1 (count-list tail))))
@@ -176,6 +176,47 @@
 		   (when *verbose* (format t "Letsym seems "))
 		   (when *verbose* (format t "to be "))
 		   (when *verbose* (format t "working if x, y, z expanded.~%" )))
+	
+	(let+      plist = '((:a 1) (:b 2) (:c 3))
+		   tree  = '(+ (* 3 (+ 4 (/ 13 2)) 5) 14 (/ (- 23 (* 2 (+ 1 2))) 3))
+		   match =  (letmatch plist
+			      () => (error "~a not supposed to be empty!" plist)
+			      x  => ((when *verbose* (format t "matched x~%")) x)
+			      (x)       => ((when *verbose* (format t "matched (x)~%"))
+					    (list x))
+			      (x y)     => ((when *verbose* (format t "matched (x y)~%"))
+					    (list x y))
+			      (x . y)   => ((when *verbose* (format t "matched (x . y)~%"))
+					    (list x y)))
+		   
+		   match2 = (letmatch plist
+			      () => (error "~a not supposed to be empty!" plist)
+			      (x)       => ((when *verbose* (format t "matched (x)~%"))
+					    (list x))
+			      (x y)     => ((when *verbose* (format t "matched (x y)~%"))
+					    (list x y))
+			      (x y z)   => ((when *verbose* (format t "matched (x y z)~%"))
+					    (list x y z))
+			      (x y z w) => ((when *verbose* (format t "matched (x y z w)~%"))
+					    (list x y z w))
+			      (x . y)   => ((when *verbose* (format t "matched (x . y)~%"))
+					    (list x y)))
+	
+	           match3 = (letmatch tree
+			      () => (error "~a not supposed to be empty!" tree)
+			      (x) => ((when *verbose* (format t "matched x~%")) x)
+			      (x (y z w u) a (b c d)) => ((declare (ignorable x w u b c))
+							  (list y z a d))
+			      (x . y) => ((when *verbose* (format t "matched (x . y)~%"))
+					    (list x y)))
+	
+		   (when *verbose* (format t "match  = ~a~%" match))
+		   (when *verbose* (format t "match2 = ~a~%" match2))
+		   (when *verbose* (format t "match3 = ~a~%" match3))
+		   (assert (= 3 (length match)))
+		   (assert (= 3 (length match2)))
+		   (assert (= 4 (length match3)))
+		   (when *verbose* (format t "Letmatch seems to be working~%")))
 	
 	(assert (= x 60))
 	(let+ x = 42

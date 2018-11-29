@@ -99,7 +99,7 @@ as a, c, ... satisfies predicate."
 	     (nth i bindings)))))
 
 (defun generate-let*s-and-function-bindings (bindings body form-name)
-  "Used by letfun and macrolet+ to generate LET* and LABELS/MACROLET forms, nested as needed to 
+  "Used by letfun and letmacro to generate LET* and LABELS/MACROLET forms, nested as needed to 
 preserve order of evaluation.
 Form-name = CL form which expects function-like bindings."
   (labels ((recur (bindings body)
