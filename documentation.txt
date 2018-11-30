@@ -32,8 +32,8 @@ Example usage can be seen in the file easy-bind-test.lisp.
 Easy-Bind's binding constructs adopt the syntax of local bindings used in Common Lisp's loop facility.
 These bindings have two basic forms:
 
-	    <var> = <expr>
-	   <list> = <list>
+	   <symbol> = <expr>
+	   <list>   = <expr>
 	
 where the first form ("simple binding") binds a single variable to the value of <expr>, while the second 
 form ("complex binding") destructures a list structure and binds a list of variables. Example:
@@ -213,6 +213,16 @@ side must be a symbol or a literal list containing 0 or more symbols and/or othe
 recursively for lists, 2) a symbol (except nil) matches anything, 3) the empty list only matches the empty list,
 4) a list matches a list if car matches car and cdr matches cdr. 
 
+T is default case which causes its right hand side to be executed without binding variables:
+
+    (letmatch '(1 2 3)
+	     () => ()
+	     (x) => (list x)
+	     t => (print 'hello)
+	     (x y z) => (list y x z))
+	     
+will print "hello".
+
 One use case for letmatch is writing recursive functions that operate on lists:
 
     (qsort list) = (letmatch list
@@ -240,6 +250,19 @@ Let- and letfun- bind in parallel, and the bindings are only in scope inside the
 For letmatch, the scope is restricted to the associated conditional branch.
 
 Binding expressions can only occur before the body of the form.
+
+Note regarding variable scope: Unlike in a `letrec' form in Scheme or other functional languages, the following 
+will not work:
+
+    (let+ fact =
+	(lambda (n)
+	   (if (= n 0)
+	   1
+	   (* n (funcall fact (- n 1)))))
+      (funcall fact 4))
+
+because the variable fact is not defined until after the binding expression is closed. Letfun must be used to
+write local recursive functions.
 
 Note on declarations: Due to the fact that macroexpansion may create nested scopes, if the body contains 
 a declaration pertaining to variables bound in a complex binding, this complex binding should appear last
