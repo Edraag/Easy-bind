@@ -255,8 +255,9 @@ Note the "implicit progn" by sequencing forms in a list in the second example.
 --- Scope ---
 
 For the "serial" binding forms let+, multi-let, letfun, letmacro and letsym, every binding is lexically in scope 
-from the point where it is defined until the binding form is closed. Binding expressions can always refer to 
-variables/functions/macros bound above them within the binding form (serial binding).
+from the point where it is defined until the binding form is closed (though see note above concerning mutually
+recursive functions in letfun). Binding expressions can always refer to variables/functions/macros bound above 
+them within the binding form (serial binding).
 
 Let- and letfun- bind in parallel, and the bindings are only in scope inside the body of the form. 
 
