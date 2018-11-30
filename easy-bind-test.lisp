@@ -147,6 +147,8 @@
 		   x = 5
 		   y = (macro-square (macro-add x s))
 		   
+		   ; Example borrowed from blog post by Michael Malis
+		   ; https://malisper.me/zap/
 		   (zap fn place &rest args) =
 		   (multi-let (temps exprs stores store-expr access-expr) =
 			      (get-setf-expansion place)
