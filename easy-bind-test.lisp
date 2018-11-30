@@ -95,6 +95,11 @@
 					 (head . tail) => ((declare (ignorable head))
 							   (+ 1 (count-list tail))))
 		   length = (count-list sorted-list)
+		   
+		   (is-odd n)  = (if (zerop n) nil
+				     (is-even (1- n)))
+		   (is-even n) = (if (zerop n) t
+				     (is-odd (1- n)))
 	      
 		   closure = (letfun count  = 0
 				     (incr) = ((incf count)
@@ -115,6 +120,10 @@
 			    (when *verbose* (format t "Letfun- seems to be working~%")))
 		   
 		   ;; Body of letfun starts here
+		   (assert (is-odd 5))
+		   (assert (is-even 6))
+		   (assert (not (is-even 7)))
+		   (assert (not (is-odd 8)))
 		   (assert (= (funcall closure) 1))
 		   (assert (= (funcall closure) 2))
 		   (assert (= (funcall closure) 3))

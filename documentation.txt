@@ -160,6 +160,19 @@ Any lambda list that can be used with labels can be used:
 	     x = 7 y = 9
 	     (add x y))
 	     
+Note that mutually recursive functions must not have any variable bindings in between their definitions,
+as this will cause two extra scopes to be nested, so that the first function will not have access to the
+second:
+
+    (is-odd n)  = (if (zerop n) nil
+		      (is-even (1- n)))
+    x = 4 ; Oops, now is-even is invisible to is-odd!
+    (is-even n) = (if (zerop n) t
+		      (is-odd (1- n)))
+
+It is however ok to have one or more function definitions in between, as these will be collected into a
+single labels form.
+
 LETFUN- only accepts complex bindings and expands into a single flet form. It differs from letfun in 
 that it binds its local functions in parallel.
 
@@ -213,7 +226,7 @@ side must be a symbol or a literal list containing 0 or more symbols and/or othe
 recursively for lists, 2) a symbol (except nil) matches anything, 3) the empty list only matches the empty list,
 4) a list matches a list if car matches car and cdr matches cdr. 
 
-T is default case which causes its right hand side to be executed without binding variables:
+T is a default case which causes its right hand side to be executed without binding variables:
 
     (letmatch '(1 2 3)
 	     () => ()
