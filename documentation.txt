@@ -254,10 +254,31 @@ Note the "implicit progn" by sequencing forms in a list in the second example.
 
 --- Scope ---
 
-For the "serial" binding forms let+, multi-let, letfun, letmacro and letsym, every binding is lexically in scope 
-from the point where it is defined until the binding form is closed (though see note above concerning mutually
-recursive functions in letfun). Binding expressions can always refer to variables/functions/macros bound above 
-them within the binding form (serial binding).
+For the "serial" binding forms let+, multi-let, letfun, letmacro and letsym, every variable binding is lexically
+in scope from the point where it is defined until the binding form is closed. In letfun, local functions that are 
+defined in sequence without any variable definitions occurring in between are visible to each other: 
+
+    (letfun (f x) = (+ x 1)
+		    (letfun (g x) = (- (f x) 1)
+			    (f x) = (* x 100)
+			    (g 3)))
+
+returns 299, not 3. The following form, however, returns 3:
+
+    (letfun (f x) = (+ x 1)
+		    (letfun (g x) = (- (f x) 1)
+			    x = 3
+			    (f x) = (* x 100)
+			    (g x)))
+			    
+because the inner f is not visible to g due to the nesting of labels and let* forms in the expansion.
+
+For local macros defined with letmacro (as with macrolet which it expands into), results are undefined if they 
+reference any bindings defined within the local scope. See 
+http://www.lispworks.com/documentation/HyperSpec/Body/s_flet_.htm
+
+Binding expressions in the "serial" binding forms can always refer to variables bound above them within the 
+binding form.
 
 Let- and letfun- bind in parallel, and the bindings are only in scope inside the body of the form. 
 
