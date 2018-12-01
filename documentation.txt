@@ -53,9 +53,9 @@ no bindings, they expand into a progn. They differ in their interpretation of co
 
 --- The individual forms ---
 
-LET+ combines the functionality of let/let* and destructuring-bind. It can be used as a general form
-for binding local variables when there is no need to bind multiple return values. It expands into let*
-and destructuring-bind forms, where let* forms are nested only as needed to preserve order of evaluation.
+LET+ combines the functionality of let* and destructuring-bind. It can be used as a general form for 
+binding local variables when there is no need to bind multiple return values. It expands into let* and 
+destructuring-bind forms, where let* forms are nested only as needed to preserve order of evaluation.
 
     (let+ (x y z) = '(1 2 3)
 	     u = (+ x y)
