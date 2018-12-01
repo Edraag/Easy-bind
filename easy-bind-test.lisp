@@ -96,6 +96,12 @@
 							   (+ 1 (count-list tail))))
 		   length = (count-list sorted-list)
 		   
+		   (last-elt l) = (letmatch l
+				    (x . nil) => x
+				    (x . xs)  => ((declare (ignorable x)) 
+						  (last-elt xs)))
+		   last-elt = (last-elt sorted-list)
+		   
 		   (is-odd n)  = (if (zerop n) nil
 				     (is-even (1- n)))
 		   (is-even n) = (if (zerop n) t
@@ -108,6 +114,7 @@
 					       count)
 				     #'incr)
 		   
+		   ;; Body of letfun starts here
 		   (letfun- (f x) = (* x 100)
 			    (g x) = (f x)
 			    (square x) = ((when *verbose* (format t "Another square function... ~%" ))
@@ -119,7 +126,6 @@
 			    (assert (= 25 (square n)))
 			    (when *verbose* (format t "Letfun- seems to be working~%")))
 		   
-		   ;; Body of letfun starts here
 		   (assert (is-odd 5))
 		   (assert (is-even 6))
 		   (assert (not (is-even 7)))
@@ -133,7 +139,10 @@
 			(assert (>= (elt sorted-list i)
 				    (elt sorted-list (- i 1)))))
 		   (when *verbose* (format t "sorted-list = ~a ~%" sorted-list))
+		   (when *verbose* (format t "last-elt = ~a ~%" last-elt))
 		   (assert (= length (length sorted-list)))
+		   (assert (= last-elt (nth (1- length) sorted-list)))
+		   
 		   (letfun (square x) = ((when *verbose* (format t "Inner square now...~%")
 					       (format t "Not actually squaring ~d...~%" x))
 					 x)

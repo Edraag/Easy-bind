@@ -249,8 +249,13 @@ One use case for letmatch is writing recursive functions that operate on lists:
 		         () => 0
 		         (head . tail) => ((declare (ignorable head))
 				           (+ 1 (count-list tail))))
+					   
+    (last-elt l) = (letmatch l
+		      (x . nil) => x
+		      (x . xs)  => ((declare (ignorable x)) 
+			            (last-elt xs)))
 
-Note the "implicit progn" by sequencing forms in a list in the second example.
+Note the "implicit progn" by sequencing forms in a list in the second two examples.
 
 --- Scope ---
 
