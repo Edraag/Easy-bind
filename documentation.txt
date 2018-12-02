@@ -249,9 +249,10 @@ Letmatch expands into a cond form - the last form above expands into
       ((MATCHES 'T '(1 2 3)) (PRINT 'HELLO))
       ((MATCHES '(X Y Z) '(1 2 3)) (LET+ (X Y Z) = '(1 2 3) (LIST Y X Z))))
       
-where matches is a non-exported function. It returns nil if none of the alternatives match.
+where `matches' is a non-exported predicate which implements the simple matching rules. Letmatch 
+returns nil if none of the alternatives match.
 
-One use case for letmatch is writing recursive functions that operate on lists:
+One possible use case for letmatch is writing recursive functions that operate on lists:
 
     (qsort list) = (letmatch list
                     () => ()
@@ -270,9 +271,9 @@ One use case for letmatch is writing recursive functions that operate on lists:
 		      (x . xs)  => ((declare (ignorable x)) 
 			            (last-elt xs)))
 
-Of course a function that checks for a match against (x . xs) when traversing a list will take
-about twice as much time as one which only checks for the base case. Note the "implicit progn" by
-sequencing forms in a list in the second two examples. 
+These are of course inefficient as the check for (x . xs) is redundant (and has to call `matches'
+recursively to check both the car and the cdr). Note the "implicit progn" by sequencing forms in a
+list in the second two examples. 
 
 --- Scope ---
 
