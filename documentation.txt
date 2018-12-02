@@ -43,9 +43,9 @@ form ("complex binding") destructures a list structure and binds a list of varia
 	   	    (format t "x = ~d y = ~d z = ~d~%" x y z))
 		    
 prints "x = 5 y = 1 z = (2 3)". Easy-bind adopts the two basic forms "simple-binding" and "complex-binding"
-using the equals sign (as in loop, := and = are synonyms - = is used in the following examples). It does not 
-use any of the other "syntactic keywords" used in the loop facility, such as "with", "and" or "do". The body 
-of the form is understood to begin after the last binding.
+using the equals sign (as in loop, := and = are synonyms - = is used in the following examples). It does 
+not use any of the other "syntactic keywords" used in the loop facility, such as "with", "and" or "do".
+The body of the form is understood to begin after the last binding.
 
 The binding constructs let+, multi-let, letfun and letmacro allow the free intermixing of simple and
 complex bindings. When only given simple bindings they macroexpand into a single let* form. When given

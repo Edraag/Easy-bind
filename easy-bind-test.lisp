@@ -67,9 +67,10 @@
 		   (when *verbose* (format t "Should be the same: ~f ~f~%" e (exp 1))))
 	
 	(letfun    n = 13
-		   (square x) = ((when *verbose* (format t "Squaring ~a, " x))
-				 (when *verbose* (format t "result = ~a ~%" (* x x)))
-				 (* x x))
+		   (square x) = (let- square = (* x x)
+				      (when *verbose* (format t "Squaring ~a, " x))
+				      (when *verbose* (format t "result = ~a ~%" square))
+				      square)
 		   m = (square n)
 		   n = v
 		   (fact n) = (case n 
@@ -122,10 +123,11 @@
 		   ;; Body of letfun starts here
 		   (letfun- (f x) = (* x 100)
 			    (g x) = (f x)
-			    (square x) = ((when *verbose* (format t "Another square function... ~%" ))
-					  (when *verbose* (format t "Squaring away... ~%" ))
-					  (when *verbose* (format t "(square ~a) = ~a ~%" x (* x x)))
-					  (* x x))
+			    (square x) = (let- square = (* x x)
+					       (when *verbose* (format t "Another square function... ~%" ))
+					       (when *verbose* (format t "Squaring away... ~%" ))
+					       (when *verbose* (format t "(square ~a) = ~a ~%" x square))
+					       square)
 			    (assert (= 300 (f 3)))
 			    (assert (= 170 (g 1)))
 			    (assert (= 25 (square n)))
