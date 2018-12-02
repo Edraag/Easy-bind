@@ -102,6 +102,11 @@
 						  (last-elt xs)))
 		   last-elt = (last-elt sorted-list)
 		   
+		   (sum-list l) = (letmatch l
+				    () => 0
+				    (x . xs) => (+ x (sum-list xs)))
+		   sum-list = (sum-list sorted-list)
+		   
 		   (is-odd n)  = (if (zerop n) nil
 				     (is-even (1- n)))
 		   (is-even n) = (if (zerop n) t
@@ -140,8 +145,10 @@
 				    (elt sorted-list (- i 1)))))
 		   (when *verbose* (format t "sorted-list = ~a ~%" sorted-list))
 		   (when *verbose* (format t "last-elt = ~a ~%" last-elt))
+		   (when *verbose* (format t "sum-list = ~a ~%" sum-list))
 		   (assert (= length (length sorted-list)))
 		   (assert (= last-elt (nth (1- length) sorted-list)))
+		   (assert (= sum-list (loop for elt in sorted-list summing elt)))
 		   
 		   (letfun (square x) = ((when *verbose* (format t "Inner square now...~%")
 					       (format t "Not actually squaring ~d...~%" x))

@@ -200,11 +200,11 @@ LETSYM expands into a single symbol-macrolet form. Example:
 	    y = (format t "Expanded y!~%")
 	    x y)
 
-LETMATCH is a conditional version of let+. It takes a form as its first argument, expected to be a list form,
-and matches its structure against the left-hand-sides of its remaining arguments. The left and right hand 
-sides of the remaining arguments must be separated by a "fat arrow" digraph (=>). The first left-hand side that 
-matches will be bound to the first argument form in a let+ (expanding into a let* or destructuring-bind),
-and its right-hand side becomes the body of the let+ form.
+LETMATCH is a conditional version of let+. It takes a form as its first argument, expected to be a list 
+form, and matches its structure against the left-hand-sides of its remaining arguments. The left and right
+hand sides of the remaining arguments must be separated by a "fat arrow" digraph (=>). The first left-hand 
+side that matches will be bound to the first argument form in a let+ (expanding into a let* or 
+destructuring-bind), and its right-hand side becomes the body of the let+ form.
 
     (letmatch '(1 (2 3))
 	 () => ()
@@ -255,7 +255,9 @@ One use case for letmatch is writing recursive functions that operate on lists:
 		      (x . xs)  => ((declare (ignorable x)) 
 			            (last-elt xs)))
 
-Note the "implicit progn" by sequencing forms in a list in the second two examples.
+Of course a function that checks for a match against (x . xs) when traversing a list will take about twice as much
+time as one which only checks for the base case. Note the "implicit progn" by sequencing forms in a list in the 
+second two examples. 
 
 --- Scope ---
 
