@@ -242,6 +242,15 @@ T is a default case which causes its right hand side to be executed without bind
 	     
 will print "hello".
 
+Letmatch expands into a cond form - the last form above expands into
+
+    (COND ((MATCHES 'NIL '(1 2 3)) NIL)
+      ((MATCHES '(X) '(1 2 3)) (LET+ (X) = '(1 2 3) (LIST X)))
+      ((MATCHES 'T '(1 2 3)) (PRINT 'HELLO))
+      ((MATCHES '(X Y Z) '(1 2 3)) (LET+ (X Y Z) = '(1 2 3) (LIST Y X Z))))
+      
+where matches is a non-exported function. It returns nil if none of the alternatives match.
+
 One use case for letmatch is writing recursive functions that operate on lists:
 
     (qsort list) = (letmatch list

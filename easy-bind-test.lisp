@@ -108,6 +108,14 @@
 				    (x . xs) => (+ x (sum-list xs)))
 		   sum-list = (sum-list sorted-list)
 		   
+		   (remove-dups l) = (letmatch l
+					 () => ()
+					 (x) => (list x)
+					 (x y . xs) => (if (equal x y)
+							   (remove-dups (cons x xs))
+							   (cons x (remove-dups (cons y xs)))))
+		   no-duplicate-sorted-list = (remove-dups sorted-list)
+		   
 		   (is-odd n)  = (if (zerop n) nil
 				     (is-even (1- n)))
 		   (is-even n) = (if (zerop n) t
@@ -142,10 +150,17 @@
 		   (assert (= (funcall closure) 3))
 		   (assert (= (nth 6 newlist) 176))
 		   (assert (= 120 (fact n)))
+		   
 		   (loop for i from 1 below (length sorted-list) do
 			(assert (>= (elt sorted-list i)
 				    (elt sorted-list (- i 1)))))
+		   
+		   (loop for i from 1 below (length no-duplicate-sorted-list) do
+			(assert (not (= (elt no-duplicate-sorted-list i)
+					(elt no-duplicate-sorted-list (- i 1))))))
+		   
 		   (when *verbose* (format t "sorted-list = ~a ~%" sorted-list))
+		   (when *verbose* (format t "no-duplicate-sorted-list = ~a ~%" no-duplicate-sorted-list))
 		   (when *verbose* (format t "last-elt = ~a ~%" last-elt))
 		   (when *verbose* (format t "sum-list = ~a ~%" sum-list))
 		   (assert (= length (length sorted-list)))
