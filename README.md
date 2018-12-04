@@ -7,4 +7,6 @@ and flet/labels/macrolet. It adopts the "paren-free" equational syntax for bindi
 from the loop facility, and generalizes it to a simple domain-specific language for local binding.
 
 Dependencies: none.
-Should work with any ANSI-compliant Common Lisp. Tested with SBCL, ECL and Clisp.
+Should work with any ANSI-compliant Common Lisp. Tested with SBCL, CMUCL, ECL and Clisp.
+
+Copyright (C) Marius Gaarde 2018. Free software licensed under the MIT license.
