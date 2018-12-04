@@ -58,14 +58,17 @@
 	(multi-let (m n b) = (values x y z)
 		   (a1 a2) = (floor (exp 1))
 		   e = (+ a1 a2)
-		   c = u 
+		   c = u
+		   (a3 a4 a5 a6 a7) = (values 1 2 3 (list 4) (list 5))
+		   c2 = (apply '+ a3 a4 a5 (append a6 a7))
 		   ;; Body of multi-let starts here
 		   (assert (= 300 (+ m n b c)))
+		   (assert (= c2 15))
+		   (when *verbose* (format t "Should be the same: ~f ~f~%" e (exp 1)))
 		   (when *verbose* (format t "Multi-let seems "))
 		   (when *verbose* (format t "to be "))
-		   (when *verbose* (format t "working.~%"))
-		   (when *verbose* (format t "Should be the same: ~f ~f~%" e (exp 1))))
-	
+		   (when *verbose* (format t "working.~%")))
+		   
 	(letfun    n = 13
 		   (square x) = (let- square = (* x x)
 				      (when *verbose* (format t "Squaring ~a, " x))

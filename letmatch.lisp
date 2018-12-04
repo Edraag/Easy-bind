@@ -24,11 +24,11 @@
 		    (matches (cdr x) (cdr y))))
     (t nil)))
 
-(defun do-leaves (tree predicate replacement-fn)
+(defun map-leaves (tree predicate replacement-fn)
   (cond ((null tree) nil)
 	((consp tree) 
-	 (cons (do-leaves (car tree) predicate replacement-fn)
-	       (do-leaves (cdr tree) predicate replacement-fn)))
+	 (cons (map-leaves (car tree) predicate replacement-fn)
+	       (map-leaves (cdr tree) predicate replacement-fn)))
 	(t (if (funcall predicate tree)
 	       (funcall replacement-fn tree)
 	       tree))))
@@ -75,9 +75,9 @@ null key-expr."
 		    collect (let+ car = (car clause)
 				  cdr = (cdr clause)
 				  ignorables = ()
-				  (setf car (do-leaves car #'ignorablep
+				  (setf car (map-leaves car #'ignorablep
 							   (lambda (x) (gensym (symbol-name x)))))
-				  (do-leaves car #'ignorablep (lambda (x) (push x ignorables)))
+				  (map-leaves car #'ignorablep (lambda (x) (push x ignorables)))
 				  (if (eq car t)
 				      `(t ,@cdr)
 				      `((matches ',car ,key-expr)
