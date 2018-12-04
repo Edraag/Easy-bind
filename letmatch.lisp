@@ -24,9 +24,22 @@
 		    (matches (cdr x) (cdr y))))
     (t nil)))
 
+(defun do-leaves (tree predicate replacement-fn)
+  (cond ((null tree) nil)
+	((consp tree) 
+	 (cons (do-leaves (car tree) predicate replacement-fn)
+	       (do-leaves (cdr tree) predicate replacement-fn)))
+	(t (if (funcall predicate tree)
+	       (funcall replacement-fn tree)
+	       tree))))
+
 (defun consequent-sign-p (x)
   (and (symbolp x)
        (string= (symbol-name x) "=>")))
+
+(defun ignorablep (x)
+  (and (symbolp x)
+       (char= (elt (symbol-name x) 0) #\_)))
 
 (defun letmatch-body-check-wellformedness (forms)
   (loop with count = 0
@@ -49,8 +62,10 @@
   (or (atom x) (listp x)))
 
 (defmacro letmatch (key-expr &body body)
-  "Conditionally expands into let+ form when list structure of key-expr
-matches left-hand side of binding form in body."
+  "Conditionally expands into a let+ form when list/tree structure of key-expr
+matches left-hand side of arrow-separated argument pair in body, or into a form
+with no bound variables if left-hand side is t or if it is nil and matches a 
+null key-expr."
   (letmatch-body-check-wellformedness body)
   (let+ cond-clauses = (parse-separated-list body 
 					     #'structure-p
@@ -59,7 +74,15 @@ matches left-hand side of binding form in body."
 	`(cond ,@(loop for clause in cond-clauses
 		    collect (let+ car = (car clause)
 				  cdr = (cdr clause)
-				  `((matches ',car ,key-expr)
-				    ,(if (and car (not (eq car t)))
-					 `(let+ ,car = ,key-expr ,@cdr)
-					 (car cdr))))))))
+				  ignorables = ()
+				  (setf car (do-leaves car #'ignorablep
+							   (lambda (x) (gensym (symbol-name x)))))
+				  (do-leaves car #'ignorablep (lambda (x) (push x ignorables)))
+				  (if (eq car t)
+				      `(t ,@cdr)
+				      `((matches ',car ,key-expr)
+					,(if car
+					     `(let+ ,car = ,key-expr 
+						    (declare (ignore ,@ignorables)) 
+						    ,@cdr)
+					     (car cdr)))))))))

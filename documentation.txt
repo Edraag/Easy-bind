@@ -242,13 +242,30 @@ T is a default case which causes its right hand side to be executed without bind
 	     
 will print "hello".
 
-Letmatch expands into a cond form - the last form above expands into
+The underscore _ and any symbol whose name begins with same are "wildcards" which are not bound as
+variables. They can be repeated in the patterns:
+
+    (letmatch '(1 2 3)
+	     (x) => x
+	     (x y) => (values x y)
+	     (_ z _) => (* z 100))
+
+Letmatch expands into a cond form - the last two forms above expand into
 
     (COND ((MATCHES 'NIL '(1 2 3)) NIL)
-      ((MATCHES '(X) '(1 2 3)) (LET+ (X) = '(1 2 3) (LIST X)))
-      ((MATCHES 'T '(1 2 3)) (PRINT 'HELLO))
-      ((MATCHES '(X Y Z) '(1 2 3)) (LET+ (X Y Z) = '(1 2 3) (LIST Y X Z))))
+      ((MATCHES '(X) '(1 2 3))
+       (LET+ (X) = '(1 2 3) (DECLARE (IGNORE)) (LIST X)))
+      (T (PRINT 'HELLO))
+      ((MATCHES '(X Y Z) '(1 2 3))
+       (LET+ (X Y Z) = '(1 2 3) (DECLARE (IGNORE)) (LIST Y X Z))))
       
+    (COND ((MATCHES '(X) '(1 2 3)) (LET+ (X) = '(1 2 3) (DECLARE (IGNORE)) X))
+      ((MATCHES '(X Y) '(1 2 3))
+       (LET+ (X Y) = '(1 2 3) (DECLARE (IGNORE)) (VALUES X Y)))
+      ((MATCHES '(#:|_612| Z #:|_613|) '(1 2 3))
+       (LET+ (#:|_612| Z #:|_613|) = '(1 2 3)
+             (DECLARE (IGNORE #:|_613| #:|_612|)) (* Z 100))))
+
 where `matches' is a non-exported predicate which implements the simple matching rules. Letmatch 
 returns nil if none of the alternatives match.
 
@@ -263,17 +280,25 @@ One possible use case for letmatch is writing recursive functions that operate o
 			       
     (count-list list) = (letmatch list
 		         () => 0
-		         (head . tail) => ((declare (ignorable head))
-				           (+ 1 (count-list tail))))
+		         (_ . tail) => (+ 1 (count-list tail)))
 					   
     (last-elt l) = (letmatch l
 		      (x . nil) => x
-		      (x . xs)  => ((declare (ignorable x)) 
-			            (last-elt xs)))
+		      (_x . xs) => (last-elt xs))
 
-These are of course inefficient as the check for (x . xs) is redundant (and has to call `matches'
-recursively to check both the car and the cdr). Note the "implicit progn" by sequencing forms in a
-list in the second two examples. 
+These are of course slightly inefficient as the check for (x . xs) is redundant (and `matches'
+calls itself recursively to check both the car and the cdr). 
+
+As with other forms above, the right-hand sides in a letmatch allow forms to be sequenced in an
+enclosing list to obtain an "implicit progn".
+
+    (letmatch list
+      ()  => ()
+      (x) => ((format t "The list contains a ")
+      	      (format t "single element ")
+	      (format t "and that element is ~a~%" x))
+      t   => ((format t "Contrary to my expectations, ")
+              (format t "the list contains more than one element.~%" )))
 
 --- Scope ---
 

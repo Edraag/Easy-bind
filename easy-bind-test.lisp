@@ -93,14 +93,12 @@
 		   sorted-list = (qsort random-list)
 		   (count-list list) = (letmatch list
 					 () => 0
-					 (head . tail) => ((declare (ignorable head))
-							   (+ 1 (count-list tail))))
+					 (_ . tail) => (+ 1 (count-list tail)))
 		   length = (count-list sorted-list)
 		   
 		   (last-elt l) = (letmatch l
 				    (x . nil) => x
-				    (x . xs)  => ((declare (ignorable x)) 
-						  (last-elt xs)))
+				    (_x . xs) => (last-elt xs))
 		   last-elt = (last-elt sorted-list)
 		   
 		   (sum-list l) = (letmatch l
@@ -111,9 +109,9 @@
 		   (remove-dups l) = (letmatch l
 					 () => ()
 					 (x) => (list x)
-					 (x y . xs) => (if (equal x y)
-							   (remove-dups (cons x xs))
-							   (cons x (remove-dups (cons y xs)))))
+					 (x y . ys) => (if (equal x y)
+							   (remove-dups (cons y ys))
+							   (cons x (remove-dups (cons y ys)))))
 		   no-duplicate-sorted-list = (remove-dups sorted-list)
 		   
 		   (is-odd n)  = (if (zerop n) nil
@@ -231,7 +229,8 @@
 			      (x y)     => ((when *verbose* (format t "matched (x y)~%"))
 					    (list x y))
 			      (x . y)   => ((when *verbose* (format t "matched (x . y)~%"))
-					    (list x y)))
+					    (list x y))
+			      T => (error "Something is wrong with letmatch"))
 		   
 		   match2 = (letmatch alist
 			      () => (error "~a not supposed to be empty!" alist)
@@ -244,22 +243,26 @@
 			      (x y z w) => ((when *verbose* (format t "matched (x y z w)~%"))
 					    (list x y z w))
 			      (x . y)   => ((when *verbose* (format t "matched (x . y)~%"))
-					    (list x y)))
+					    (list x y))
+			      T => (error "Something is wrong with letmatch"))
+		   
 	
 	           match3 = (letmatch tree
 			      () => (error "~a not supposed to be empty!" tree)
 			      (x) => ((when *verbose* (format t "matched x~%")) x)
-			      (x (y z w u) a (b c d)) => ((declare (ignorable x w u b c))
-							  (list y z a d))
+			      (_ (y z _ _) a (_ _ d)) => (list y z a d)
 			      (x . y) => ((when *verbose* (format t "matched (x . y)~%"))
-					    (list x y)))
+					    (list x y))
+			      T => (error "Something is wrong with letmatch"))
 	
 		   (when *verbose* (format t "match  = ~a~%" match))
 		   (when *verbose* (format t "match2 = ~a~%" match2))
 		   (when *verbose* (format t "match3 = ~a~%" match3))
+		   (when *verbose* (format t "(eval match3) = ~a~%" (eval match3)))
 		   (assert (= 3 (length match)))
 		   (assert (= 3 (length match2)))
 		   (assert (= 4 (length match3)))
+		   (assert (= 126 (eval match3)))
 		   (when *verbose* (format t "Letmatch seems to be working~%")))
 	
 	(assert (= x 60))
