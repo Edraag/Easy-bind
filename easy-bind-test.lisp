@@ -166,7 +166,7 @@
 		   (when *verbose* (format t "sum-list = ~a ~%" sum-list))
 		   (assert (= length (length sorted-list)))
 		   (assert (= last-elt (nth (1- length) sorted-list)))
-		   (assert (= sum-list (loop for elt in sorted-list summing elt)))
+		   (assert (= sum-list (reduce '+ sorted-list)))
 		   
 		   (letfun (square x) = ((when *verbose* (format t "Inner square now...~%")
 					       (format t "Not actually squaring ~d...~%" x))

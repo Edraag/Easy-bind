@@ -353,3 +353,17 @@ Note on declarations: Due to the fact that macroexpansion may create nested scop
 contains a declaration pertaining to variables bound in a complex binding, this complex binding 
 should appear last in the series of bindings. If the declaration pertains to variables bound in
 simple bindings, these should appear after the last complex binding.
+
+Emacs: To have the Easy-bind binding forms syntax-highlighted as "keywords" in Emacs, add the
+following form to your .emacs:
+
+    (font-lock-add-keywords 'lisp-mode
+			'(("\\_<let\\+\\_>" . font-lock-keyword-face)
+			  ("\\_<let\\-\\_>" . font-lock-keyword-face)
+			  ("\\_<letsym\\_>" . font-lock-keyword-face)
+			  ("\\_<letmacro\\_>" . font-lock-keyword-face)
+			  ("\\_<letfun\\_>" . font-lock-keyword-face)
+			  ("\\_<letfun\\-\\_>" . font-lock-keyword-face)
+			  ("\\_<letmatch\\_>" . font-lock-keyword-face)
+			  ("\\_<multi\\-let\\_>" . font-lock-keyword-face)))
+			  

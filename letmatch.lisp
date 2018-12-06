@@ -41,14 +41,6 @@
   (and (symbolp x)
        (char= (elt (symbol-name x) 0) #\_)))
 
-(defun letmatch-body-check-wellformedness (forms)
-  (loop with count = 0
-     for elt in forms do
-       (progn (incf count)
-	      (when (and (multiple-of 3 (- count 2))
-			 (not (consequent-sign-p elt)))
-		(error "Malformed letmatch expression - missing or misplaced => sign")))))
-
 (defun splice-implicit-progn (forms)
   (loop for i below (length forms) collect
        (let+ (x . z) = (nth i forms)
@@ -57,6 +49,14 @@
 		  (not (eq (caaar z) 'lambda)))
 	     (list* x (car z))
 	     (nth i forms)))))
+
+(defun letmatch-body-check-wellformedness (forms)
+  (loop with count = 0
+     for elt in forms do
+       (progn (incf count)
+	      (when (and (multiple-of 3 (- count 2))
+			 (not (consequent-sign-p elt)))
+		(error "Malformed letmatch expression - missing or misplaced => sign")))))
 
 (defun structure-p (x)
   (or (atom x) (listp x)))
