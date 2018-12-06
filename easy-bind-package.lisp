@@ -28,4 +28,5 @@
 	   :letfun-
 	   :letmacro
 	   :letsym
-	   :letmatch))
+	   :letmatch
+	   :with))
