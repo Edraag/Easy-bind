@@ -25,7 +25,7 @@ binding.
 ------- BINDING CONSTRUCTS -------
 
 Easy-bind provides the macros let+, let-, multi-let, letfun, letfun-, letmatch, letmacro and letsym
-for binding local variables, functions and macros.
+for binding local variables, functions and macros. `With' is an alias for let+.
 
 Example usage can be seen in the file easy-bind-test.lisp.
 
@@ -46,8 +46,8 @@ Example:
 prints "x = 5 y = 1 z = (2 3)". Easy-bind adopts the two basic forms "simple-binding" and 
 "complex-binding" using the equals sign (as in loop, := and = are synonyms - = is used in the 
 following examples). It does not use any of the other "syntactic keywords" used in the loop 
-facility, such as "with", "and" or "do". The body of the form is understood to begin after the last 
-binding.
+facility, such as `with', `and' or `do' (although `with' is provided as a synonym for let+). The
+body of the form is understood to begin after the last binding.
 
 The binding constructs let+, multi-let, letfun and letmacro allow the free intermixing of simple 
 and complex bindings. When only given simple bindings they macroexpand into a single let* form. 
@@ -85,10 +85,13 @@ macroexpands into:
 and prints 3, 5 and 15. The left-hand-side of a complex binding allows everything destructuring-bind
 allows, such as &optional, &rest etc.
 
+WITH is a synonym for let+. It is thus similar to the `with' keyword in the loop facility, except it 
+does not expect or accept other "keyword symbols" like `and' or `do'.
+
 LET- only accepts simple bindings and expands into a single let form. It differs from let+ in that
 it, like let, binds multiple variables in parallel:
 
-    (let+ x = 9 y = 5
+    (with x = 9 y = 5
 	(let- x = y
 	      y = x
 	  (format t "x = ~a, y = ~a~%" x y)))
@@ -360,6 +363,7 @@ following form to your .emacs:
     (font-lock-add-keywords 'lisp-mode
 			'(("\\_<let\\+\\_>" . font-lock-keyword-face)
 			  ("\\_<let\\-\\_>" . font-lock-keyword-face)
+			  ("\\_<with\\_>" . font-lock-keyword-face)
 			  ("\\_<letsym\\_>" . font-lock-keyword-face)
 			  ("\\_<letmacro\\_>" . font-lock-keyword-face)
 			  ("\\_<letfun\\_>" . font-lock-keyword-face)

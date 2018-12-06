@@ -43,7 +43,7 @@
 
 (defun splice-implicit-progn (forms)
   (loop for i below (length forms) collect
-       (let+ (x . z) = (nth i forms)
+       (with (x . z) = (nth i forms)
 	 (if (and (consp (car z))
 		  (consp (caar z))
 		  (not (eq (caaar z) 'lambda)))

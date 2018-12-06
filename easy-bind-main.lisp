@@ -245,3 +245,6 @@ or a PROGN form if no bindings are given."
       (if (null bindings)
 	  `(progn ,@body)
 	  `(symbol-macrolet ,bindings ,@body)))))
+
+(defmacro with (&rest forms)
+  `(let+ ,@forms))

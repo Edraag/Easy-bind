@@ -222,7 +222,7 @@
 		   (when *verbose* (format t "to be "))
 		   (when *verbose* (format t "working if x, y, z expanded.~%" )))
 	
-	(let+      alist = '((:a 1) (:b 2) (:c 3))
+	(with      alist = '((:a 1) (:b 2) (:c 3))
 		   tree  = '(+ (* 3 (+ 4 (/ 13 2)) 5) 14 (/ (- 23 (* 2 (+ 1 2))) 3))
 		   match =  (letmatch alist
 			      () => (error "~a not supposed to be empty!" alist)
