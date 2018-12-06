@@ -86,7 +86,8 @@ and prints 3, 5 and 15. The left-hand-side of a complex binding allows everythin
 allows, such as &optional, &rest etc.
 
 WITH is a synonym for let+. It is thus similar to the `with' keyword in the loop facility, except it 
-does not expect or accept other "keyword symbols" like `and' or `do'.
+does not expect or accept other "keyword symbols" like `and' or `do', and that it binds in series
+rather than in parallel.
 
 LET- only accepts simple bindings and expands into a single let form. It differs from let+ in that
 it, like let, binds multiple variables in parallel:
