@@ -20,7 +20,8 @@
 
 (defpackage :edraag.easy-bind
   (:use :common-lisp)
-  (:nicknames :easy-bind)
+  (:nicknames :easy-bind
+	      :e-b)
   (:export :multi-let
 	   :let+
 	   :let-

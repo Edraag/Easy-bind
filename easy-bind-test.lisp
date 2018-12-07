@@ -70,7 +70,7 @@
 		   (when *verbose* (format t "working.~%")))
 		   
 	(letfun    n = 13
-		   (square x) = (let- square = (* x x)
+		   (square x) = (with square = (* x x)
 				      (when *verbose* (format t "Squaring ~a, " x))
 				      (when *verbose* (format t "result = ~a ~%" square))
 				      square)
@@ -117,6 +117,18 @@
 							   (cons x (remove-dups (cons y ys)))))
 		   no-duplicate-sorted-list = (remove-dups sorted-list)
 		   
+		   (qsort list) = (if list
+				      (letfun p  = (car list)
+					      xs = (cdr list)
+					      (filter x) = (> x p)
+					      (nconc (qsort (remove-if #'filter xs))
+						     (list p)
+						     (qsort (remove-if-not #'filter xs))))
+				      (when *verbose* (format t "Second qsort finishing...~%" )))
+		   
+		   second-random-list = (random-list 10 100)
+		   second-sorted-list = (qsort second-random-list)
+		   
 		   (is-odd n)  = (if (zerop n) nil
 				     (is-even (1- n)))
 		   (is-even n) = (if (zerop n) t
@@ -156,6 +168,10 @@
 			(assert (>= (elt sorted-list i)
 				    (elt sorted-list (- i 1)))))
 		   
+		   (loop for i from 1 below (length second-sorted-list) do
+			(assert (>= (elt second-sorted-list i)
+				    (elt second-sorted-list (- i 1)))))
+		   
 		   (loop for i from 1 below (length no-duplicate-sorted-list) do
 			(assert (not (= (elt no-duplicate-sorted-list i)
 					(elt no-duplicate-sorted-list (- i 1))))))
@@ -164,6 +180,7 @@
 		   (when *verbose* (format t "no-duplicate-sorted-list = ~a ~%" no-duplicate-sorted-list))
 		   (when *verbose* (format t "last-elt = ~a ~%" last-elt))
 		   (when *verbose* (format t "sum-list = ~a ~%" sum-list))
+		   (when *verbose* (format t "second-sorted-list = ~a ~%" second-sorted-list))
 		   (assert (= length (length sorted-list)))
 		   (assert (= last-elt (nth (1- length) sorted-list)))
 		   (assert (= sum-list (reduce '+ sorted-list)))
@@ -279,5 +296,5 @@
         t))
 
 (defun test-easy-bind-silent ()
-  (let- *verbose* = nil
+  (with *verbose* = nil
 	(test-easy-bind)))
