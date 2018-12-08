@@ -144,7 +144,7 @@
 		   ;; Body of letfun starts here
 		   (letfun- (f x) = (* x 100)
 			    (g x) = (f x)
-			    (square x) = (let- square = (* x x)
+			    (square x) = (with square = (* x x)
 					       (when *verbose* (format t "Another square function... ~%" ))
 					       (when *verbose* (format t "Squaring away... ~%" ))
 					       (when *verbose* (format t "(square ~a) = ~a ~%" x square))
@@ -198,8 +198,8 @@
 	
 	(letmacro  s = z
 		   (macro-square x) =
-		   (let+ g = (gensym)
-			 `(let+ ,g = ,x
+		   (with g = (gensym)
+			 `(let- ,g = ,x
 				(* ,g ,g)))
 		   (macro-add &rest args) = ((format nil "Going to add up some args...")
 					     (format nil "This will not be printed..." )
@@ -286,9 +286,9 @@
 		   (when *verbose* (format t "Letmatch seems to be working~%")))
 	
 	(assert (= x 60))
-	(let- x = 42
+	(with x = 42
 	      (assert (= x 42))
-	      (let+ x = 1
+	      (with x = 1
 		    (assert (= x 1)))
 	      (assert (= x 42)))
 	(assert (= x 60))
