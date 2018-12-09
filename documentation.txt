@@ -58,10 +58,9 @@ bindings.
 
 LET+ combines the functionality of let* and destructuring-bind. It can also bind local functions
 and macros and multiple return values if certain keywords are used in the car position of complex
-binding lists. It can be used as a general form for binding local variables when there is no need
-to bind multiple return values. It expands into let* and destructuring-bind forms, where let* forms
-are nested only as needed to preserve order of evaluation, and optionally into nested labels,
-macrolet and multiple-value-bind forms.
+binding lists. It can be used as a general form for binding local variables. It expands into let*
+and destructuring-bind forms, where let* forms are nested only as needed to preserve order of 
+evaluation, and optionally into nested labels, macrolet and multiple-value-bind forms.
 
     (let+ (x y z) = '(1 2 3)
 	     u = (+ x y)
@@ -99,9 +98,12 @@ Each keyword-initiated form will expand into a single lables/macrolet/multiple-v
 This means that mutually recursive functions can not be defined with let+. Letfun must be used to
 define mutually recursive functions (see below).
 
+Like with letfun and letmacro, functions and macros bound with let+ obtain an "implicit progn" by
+sequencing forms in a surrounding list. See under LETFUN below.
+
 WITH is a synonym for let+. It is thus similar to the `with' keyword in the loop facility, except it 
-does not expect or accept other "keyword symbols" like `and' or `do', and that it binds in series
-rather than in parallel.
+does not expect or accept other "keyword symbols" like `and' or `do' outside of the car position of
+complex binding lists, and that it binds in series rather than in parallel.
 
 LET- only accepts simple bindings and expands into a single let form. It differs from let+ in that
 it, like let, binds multiple variables in parallel:
@@ -114,7 +116,7 @@ it, like let, binds multiple variables in parallel:
 prints "x = 5, y = 9".
 
 MULTI-LET works like let+ except that complex bindings are used to bind multiple values rather than
-destructuring. Example:
+destructuring ,and that it does not accept keywords. Example:
 
     (multi-let (a b) = (floor pi)
    	p = (+ a b)
