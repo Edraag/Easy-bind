@@ -28,9 +28,21 @@
 	(k l) = e
 	f = (cons k l)
 	(h . j) = f
+	(:val v1 v2) = (values 1000 2000)
+	(:fun square x) = ((when *verbose* (format t "First squaring function...~%"))
+			   (* x x))
 	x = 60
 	y = 70
+	v1-squared = (square v1)
+	(:macro macro-square x) = (with g = (gensym)
+				  `(let+ ,g = ,x
+					 (* ,g ,g)))
+	v1-macro-squared = (macro-square v1)
 	(z . u) = '(80 . 90)
+	(:fun fac n) = (if (zerop n)
+			   1
+			   (* n (fac (- n 1))))
+	n = (fac 5)
 	;; Body of let+ starts here
 	(assert  (= (car e) k v 5))
 	(assert	 (= (cadr e) l w 6))
@@ -40,6 +52,10 @@
 	(assert	 (= a 1))
 	(assert	 (= d 4))
 	(assert  (= (+ x y z u) 300))
+	(assert  (= 3000 (+ v1 v2)))
+	(assert  (= 1000000 v1-squared))
+	(assert  (= v1-squared v1-macro-squared))
+	(assert  (= n 120))
 	(when *verbose* (format t "Let+ seems "))
 	(when *verbose* (format t "to be "))
 	(when *verbose* (format t "working~%"))
@@ -118,12 +134,12 @@
 		   no-duplicate-sorted-list = (remove-dups sorted-list)
 		   
 		   (qsort list) = (if list
-				      (letfun p  = (car list)
-					      xs = (cdr list)
-					      (filter x) = (> x p)
-					      (nconc (qsort (remove-if #'filter xs))
-						     (list p)
-						     (qsort (remove-if-not #'filter xs))))
+				      (with p  = (car list)
+					    xs = (cdr list)
+					    (:fun filter x) = (> x p)
+					    (nconc (qsort (remove-if #'filter xs))
+						   (list p)
+						   (qsort (remove-if-not #'filter xs))))
 				      (when *verbose* (format t "Second qsort finishing...~%" )))
 		   
 		   second-random-list = (random-list 10 100)

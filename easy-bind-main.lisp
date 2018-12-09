@@ -90,13 +90,16 @@ as a, c, ... satisfies predicate."
   (collect-binding-list bindings #'simple-left-hand-side-p))
 
 (defun function-bindings-splice-implicit-progn (bindings)
-  (loop for i below (length bindings) collect
-       (destructuring-bind (x y . z) (nth i bindings)
+  (loop for elt in bindings collect
+       (single-splice-implicit-progn elt)))
+
+(defun single-splice-implicit-progn (function-binding)
+  (destructuring-bind (x y . z) function-binding
 	 (if (and (consp (car z))
 		  (consp (caar z))
 		  (not (eq (caaar z) 'lambda)))
 	     (list* x y (car z))
-	     (nth i bindings)))))
+	     function-binding)))
 
 (defun generate-let*s-and-function-bindings (bindings body form-name)
   "Used by letfun and letmacro to generate LET* and LABELS/MACROLET forms, nested as needed to 
@@ -120,6 +123,61 @@ Form-name = CL form which expects function-like bindings."
 			    (function-bindings-splice-implicit-progn function-bindings))
 		      `((,form-name ,function-bindings
 				    ,@(recur (nthcdr count bindings) body))))))))
+    (car (recur bindings body))))
+
+(defun function-keyword-p (x)
+  (and (symbolp x)
+       (string= (symbol-name x) (symbol-name 'fun))))
+
+(defun macro-keyword-p (x)
+  (and (symbolp x)
+       (string= (symbol-name x) (symbol-name 'macro))))
+
+(defun values-keyword-p (x)
+  (and (symbolp x)
+       (string= (symbol-name x) (symbol-name 'val))))
+
+(defun generate-let*s-and-complex-bindings (bindings body)
+  "Used by let+ to generate LET* and DESTRUCTURING-BIND/MULTIPLE-VALUE-BIND/LABELS/MACROLET 
+forms, with let* forms nested as needed to preserve order of evaluation."
+  (labels ((recur (bindings body)
+	     (cond ((null bindings)
+		    body)
+		   ((simple-left-hand-side-p (caar bindings))
+		    (let* ((let-bindings (generate-let-binding-list bindings))
+			   (count (length let-bindings)))
+		      `((let* ,let-bindings
+			  ,@(recur (nthcdr count bindings) body)))))
+		   ; Extra level of parens needed because body must be spliced in at the end of the recursion,
+		   ; so nested let* and <form-name> forms must also be spliced. Thus the outer fn returns the
+		   ; car of the list.
+		   (t
+		    (cond
+		      ((function-keyword-p (caaar bindings))
+		       (setf (caar bindings) (cdaar bindings))
+		       (let ((function-binding 
+			      (make-function-binding (car bindings))))
+			 (setf function-binding
+			       (single-splice-implicit-progn function-binding))
+			 `((labels (,function-binding)
+			     ,@(recur (cdr bindings) body)))))
+		      
+		      ((macro-keyword-p (caaar bindings))
+		       (setf (caar bindings) (cdaar bindings))
+		       (let ((function-binding 
+			      (make-function-binding (car bindings))))
+			 (setf function-binding
+			       (single-splice-implicit-progn function-binding))
+			 `((macrolet (,function-binding)
+			     ,@(recur (cdr bindings) body)))))
+		      
+		      ((values-keyword-p (caaar bindings))
+		       (setf (caar bindings) (cdaar bindings))
+		       `((multiple-value-bind ,@(car bindings)
+			     ,@(recur (cdr bindings) body))))
+		      (t
+		       `((destructuring-bind ,@(car bindings)
+			     ,@(recur (cdr bindings) body)))))))))
     (car (recur bindings body))))
 
 (defun generate-let*s-and-labels (bindings body)
@@ -150,11 +208,18 @@ Form-name = CL form which expects function-like bindings."
   "Used by multi-let to generate LET* and MULTIPLE-VALUE-BIND forms."
   (generate-let*s-and-<binding-name> bindings body 'multiple-value-bind))
 
-(defun generate-let*s-and-destructuring-binds (bindings body)
-  "Used by let+ to generate LET* and DESTRUCTURING-BIND forms."
-  (generate-let*s-and-<binding-name> bindings body 'destructuring-bind))
-
 ;; ----------- Binding macros -----------
+
+(defmacro let+ (&rest forms)
+  (multiple-value-bind
+	(bindings count)
+      (parse-separated-list forms 
+			    #'simple-or-complex-left-hand-side-p 
+			    #'equals-sign-p)
+    (let ((body (nthcdr count forms)))
+      (if (null bindings)
+	  `(progn ,@body)
+	  (generate-let*s-and-complex-bindings bindings body)))))
 
 (defmacro multi-let (&rest forms)
   "Expands into LET* and MULTIPLE-VALUE-BIND forms, LET*s nested if needed to preserve order of evaluation,
@@ -168,19 +233,6 @@ or a PROGN form if no bindings are given."
       (if (null bindings)
 	  `(progn ,@body)
 	  (generate-let*s-and-multiple-value-binds bindings body)))))
-
-(defmacro let+ (&rest forms)
-  "Expands into LET* and DESTRUCTURING-BIND forms, LET*s nested if needed to preserve order of evaluation,
-or a PROGN form if no bindings are given."
-  (multiple-value-bind 
-	(bindings count)
-      (parse-separated-list forms 
-			    #'simple-or-complex-left-hand-side-p 
-			    #'equals-sign-p)
-    (let ((body (nthcdr count forms)))
-      (if (null bindings)
-	  `(progn ,@body)
-	  (generate-let*s-and-destructuring-binds bindings body)))))
 
 (defmacro let- (&rest forms)
   "Expands into a single LET form, or a PROGN if no bindings are given"

@@ -56,10 +56,12 @@ bindings.
 
 --- The individual forms ---
 
-LET+ combines the functionality of let* and destructuring-bind. It can be used as a general form 
-for binding local variables when there is no need to bind multiple return values. It expands into 
-let* and destructuring-bind forms, where let* forms are nested only as needed to preserve order of
-evaluation.
+LET+ combines the functionality of let* and destructuring-bind. It can also bind local functions
+and macros and multiple return values if certain keywords are used in the car position of complex
+binding lists. It can be used as a general form for binding local variables when there is no need
+to bind multiple return values. It expands into let* and destructuring-bind forms, where let* forms
+are nested only as needed to preserve order of evaluation, and optionally into nested labels,
+macrolet and multiple-value-bind forms.
 
     (let+ (x y z) = '(1 2 3)
 	     u = (+ x y)
@@ -83,7 +85,19 @@ macroexpands into:
           (PRINT C))))
 
 and prints 3, 5 and 15. The left-hand-side of a complex binding allows everything destructuring-bind
-allows, such as &optional, &rest etc.
+allows, such as &optional, &rest etc. The keywords that can be supplied are :val, :fun and :macro
+for binding multiple return values, local functions and local macros, respectively:
+
+    (let+ x = 9
+          (:fun fac n) = (if (zerop n)
+	                     1
+			     (* n (fac (- n 1))))
+	  (:val a b) = (values 1 2)
+	  (fac (+ x a b)))
+
+Each keyword-initiated form will expand into a single lables/macrolet/multiple-value-bind form. 
+This means that mutually recursive functions can not be defined with let+. Letfun must be used to
+define mutually recursive functions (see below).
 
 WITH is a synonym for let+. It is thus similar to the `with' keyword in the loop facility, except it 
 does not expect or accept other "keyword symbols" like `and' or `do', and that it binds in series
