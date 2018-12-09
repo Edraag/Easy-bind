@@ -42,13 +42,13 @@
        (char= (elt (symbol-name x) 0) #\_)))
 
 (defun splice-implicit-progn (forms)
-  (loop for i below (length forms) collect
-       (with (x . z) = (nth i forms)
+  (loop for form in forms collect
+       (with (x . z) = form
 	 (if (and (consp (car z))
 		  (consp (caar z))
 		  (not (eq (caaar z) 'lambda)))
 	     (list* x (car z))
-	     (nth i forms)))))
+	     form))))
 
 (defun letmatch-body-check-wellformedness (forms)
   (loop with count = 0
