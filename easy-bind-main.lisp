@@ -145,20 +145,12 @@ Form-name = CL form which expects function-like bindings."
   (and (consp x)
        (macro-keyword-p (car x))))
 
-(defun collect-labels-bindings (bindings)
-  (let ((labels-bindings 
-	 (collect-binding-list bindings #'function-binding-p)))
-    (loop for elt in labels-bindings do
+(defun collect-function-bindings (bindings predicate)
+  (let ((function-bindings 
+	 (collect-binding-list bindings predicate)))
+    (loop for elt in function-bindings do
 	 (setf (car elt) (cdar elt)))
-    (loop for elt in labels-bindings collect 
-	 (make-function-binding elt))))
-
-(defun collect-macrolet-bindings (bindings)
-  (let ((macrolet-bindings 
-	 (collect-binding-list bindings #'macro-binding-p)))
-    (loop for elt in macrolet-bindings do
-	 (setf (car elt) (cdar elt)))
-    (loop for elt in macrolet-bindings collect 
+    (loop for elt in function-bindings collect 
 	 (make-function-binding elt))))
 
 (defun generate-let*s-and-complex-bindings (bindings body)
@@ -176,32 +168,33 @@ forms, with let* forms nested as needed to preserve order of evaluation."
 		   ; so nested let* and <form-name> forms must also be spliced. Thus the outer fn returns the
 		   ; car of the list.
 		   (t
-		    (cond
-		      ((function-keyword-p (caaar bindings))
-		       (let* ((labels-bindings
-			       (collect-labels-bindings bindings))
-			      (count (length labels-bindings)))
-			 (setf labels-bindings
-			       (function-bindings-splice-implicit-progn labels-bindings))
-			 `((labels ,labels-bindings
-			     ,@(recur (nthcdr count bindings) body)))))
+		    (let ((first-symbol (caaar bindings)))
+		      (cond
+			((function-keyword-p first-symbol)
+			 (let* ((labels-bindings
+				 (collect-function-bindings bindings #'function-binding-p))
+				(count (length labels-bindings)))
+			   (setf labels-bindings
+				 (function-bindings-splice-implicit-progn labels-bindings))
+			   `((labels ,labels-bindings
+			       ,@(recur (nthcdr count bindings) body)))))
 		      
-		      ((macro-keyword-p (caaar bindings))
-		       (let* ((macrolet-bindings
-			       (collect-macrolet-bindings bindings))
-			      (count (length macrolet-bindings)))
-			 (setf macrolet-bindings
-			       (function-bindings-splice-implicit-progn macrolet-bindings))
-			 `((macrolet ,macrolet-bindings
-			     ,@(recur (nthcdr count bindings) body)))))
+			((macro-keyword-p first-symbol)
+			 (let* ((macrolet-bindings
+				 (collect-function-bindings bindings #'macro-binding-p))
+				(count (length macrolet-bindings)))
+			   (setf macrolet-bindings
+				 (function-bindings-splice-implicit-progn macrolet-bindings))
+			   `((macrolet ,macrolet-bindings
+			       ,@(recur (nthcdr count bindings) body)))))
 		      
-		      ((values-keyword-p (caaar bindings))
-		       (setf (caar bindings) (cdaar bindings))
-		       `((multiple-value-bind ,@(car bindings)
-			     ,@(recur (cdr bindings) body))))
-		      (t
-		       `((destructuring-bind ,@(car bindings)
-			     ,@(recur (cdr bindings) body)))))))))
+			((values-keyword-p first-symbol)
+			 (setf (caar bindings) (cdaar bindings))
+			 `((multiple-value-bind ,@(car bindings)
+			       ,@(recur (cdr bindings) body))))
+			(t
+			 `((destructuring-bind ,@(car bindings)
+			       ,@(recur (cdr bindings) body))))))))))
     (car (recur bindings body))))
 
 (defun generate-let*s-and-labels (bindings body)
