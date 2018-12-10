@@ -27,7 +27,7 @@ binding.
 Easy-bind provides the macros let+, let-, multi-let, letfun, letfun-, letmatch, letmacro and letsym
 for binding local variables, functions and macros. `With' is an alias for let+. Let+/with is the
 most general form, which can be used to bind local variables, functions and macros within a single
-form. It will expand into 
+form. 
 
 Example usage can be seen in the file easy-bind-test.lisp.
 
@@ -66,12 +66,12 @@ preserve order of evaluation, and optionally into (possibly nested) labels, macr
 multiple-value-bind forms.
 
     (let+ (x y z) = '(1 2 3)
-	     u = (+ x y)
-	     v = (+ y z)
-	     (a b c) = (list u v (* u v)) 
-	     (print a)
-	     (print b)
-	     (print c))
+          u = (+ x y)
+          v = (+ y z)
+          ((a) b c) = (list (list u) v (* u v)) 
+          (print a)
+          (print b)
+          (print c))
 
 macroexpands into:
 
@@ -80,8 +80,8 @@ macroexpands into:
         '(1 2 3)
       (LET* ((U (+ X Y)) (V (+ Y Z)))
         (DESTRUCTURING-BIND
-            (A B C)
-            (LIST U V (* U V))
+            ((A) B C)
+            (LIST (LIST U) V (* U V))
           (PRINT A)
           (PRINT B)
           (PRINT C))))
@@ -94,32 +94,33 @@ for binding multiple return values, local functions and local macros, respective
           (:fun fac n) = (if (zerop n)
 	                     1
 			     (* n (fac (- n 1))))
-	  (:val a b) = (values 1 2)
-	  (:macro square x) =
+          (:val a b) = (values 1 2)
+          (:macro square x) =
 	         (let+ g = (gensym)
 		   `(let+ ,g = ,x
 		     (* ,g ,g)))
-	  (fac (square (+ x a b))))
-	  
-    (let+
-          (:fun qsort list) = (when list
-			        (with (p . xs) = list
-				      (:fun filter x) = (> x p)
-				      (nconc (qsort (remove-if #'filter xs))
-				             (list p)
-				             (qsort (remove-if-not #'filter xs)))))
+          (fac (square (+ x a b))))
+
+    (let+ (:fun qsort list) = 
+            (when list
+              (with (p . xs) = list
+                    (:fun filter x) = (> x p)
+                    (nconc (qsort (remove-if #'filter xs))
+                           (list p)
+                           (qsort (remove-if-not #'filter xs)))))
+          (qsort *a*))
 
 If function bindings appear in sequence without any non-function bindings in between, they are
 collected into a single labels form. This means that mutually recursive functions can be defined:
 
     (with x = 9
-	  y = 5
+          y = 5
           (:fun is-even n) = (if (zerop n) t
 				 (is-odd (- n 1)))
-	  (:fun is-odd n)  = (if (zerop n) nil
+          (:fun is-odd n)  = (if (zerop n) nil
 				 (is-even (- n 1)))
-	  (and (is-odd x)
-	       (not (is-even y))))
+          (and (is-odd x)
+               (not (is-even y))))
 
 Similarly, a sequence of macro bindings will be collected into a single macrolet form.
 
@@ -144,10 +145,10 @@ MULTI-LET works like let+ except that complex bindings are used to bind multiple
 destructuring, and that it does not accept keywords. Example:
 
     (multi-let (a b) = (floor pi)
-   	p = (+ a b)
-	(x y) = (floor (exp 1))
-	e = (+ x y)
-        (expt e (* p (complex 0 1))))
+               p = (+ a b)
+               (x y) = (floor (exp 1))
+               e = (+ x y)
+               (expt e (* p (complex 0 1))))
 
 macroexpands into:
 
@@ -246,8 +247,8 @@ Any lambda list that can be used by macrolet can be used.
 LETSYM expands into a single symbol-macrolet form. Example:
 
     (letsym x = (format t "Expanded x!~%")
-	    y = (format t "Expanded y!~%")
-	    x y)
+            y = (format t "Expanded y!~%")
+            x y)
 
 LETMATCH is a conditional version of let+. It takes a form as its first argument, expected to be a
 list form, and matches its structure against the left-hand-sides of its remaining arguments. The
@@ -257,19 +258,19 @@ left and right hand sides of the remaining arguments must be separated by a "fat
 form.
 
     (letmatch '(1 (2 3))
-	 () => ()
-	 (x) => (list x)
-	 (x y) => (list x y)
-	 (x (y z)) => (list x y z))
+         () => ()
+         (x) => (list x)
+         (x y) => (list x y)
+         (x (y z)) => (list x y z))
 	 
 returns (1 (2 3)) because (x y) is the first alternative that matches the structure of '(1 (2 3)),
 causing x to be bound to 1 and y to be bound to (2 3) before the code (list x y) is executed. If we
 remove the (x y) alternative,
 
     (letmatch '(1 (2 3))
-	 () => ()
-	 (x) => (list x)
-	 (x (y z)) => (list x y z))
+         () => ()
+         (x) => (list x)
+         (x (y z)) => (list x y z))
 
 returns (1 2 3) because the alternative (x (y z)) was the first match. The rules for matching are:
 1) A left-hand side must be a symbol or a literal list containing 0 or more symbols and/or other
@@ -280,10 +281,10 @@ matches cdr.
 T is a default case which causes its right hand side to be executed without binding variables:
 
     (letmatch '(1 2 3)
-	     () => ()
-	     (x) => (list x)
-	     t => (print 'hello)
-	     (x y z) => (list y x z))
+         () => ()
+         (x) => (list x)
+         t => (print 'hello)
+         (x y z) => (list y x z))
 	     
 will print "hello".
 
@@ -291,9 +292,9 @@ The underscore _ and any symbol whose name begins with same are "wildcards" whic
 variables. They can be repeated in the patterns:
 
     (letmatch '(1 2 3)
-	     (x) => x
-	     (x y) => (values x y)
-	     (_ z _) => (* z 100))
+         (x) => x
+         (x y) => (values x y)
+         (_ z _) => (* z 100))
 
 Letmatch expands into a cond form - the last two forms above expand into
 
