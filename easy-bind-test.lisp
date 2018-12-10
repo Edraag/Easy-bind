@@ -140,14 +140,12 @@
 							   (cons x (remove-dups (cons y ys)))))
 		   no-duplicate-sorted-list = (remove-dups sorted-list)
 		   
-		   (qsort list) = (if list
-				      (with p  = (car list)
-					    xs = (cdr list)
-					    (:fun filter x) = (> x p)
-					    (nconc (qsort (remove-if #'filter xs))
-						   (list p)
-						   (qsort (remove-if-not #'filter xs))))
-				      (when *verbose* (format t "Second qsort finishing...~%" )))
+		   (qsort list) = (when list
+				    (with (p . xs) = list
+					  (:fun filter x) = (> x p)
+					  (nconc (qsort (remove-if #'filter xs))
+						 (list p)
+						 (qsort (remove-if-not #'filter xs)))))
 		   
 		   second-random-list = (random-list 10 100)
 		   second-sorted-list = (qsort second-random-list)

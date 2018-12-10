@@ -100,6 +100,14 @@ for binding multiple return values, local functions and local macros, respective
 		   `(let+ ,g = ,x
 		     (* ,g ,g)))
 	  (fac (square (+ x a b))))
+	  
+    (let+
+          (:fun qsort list) = (when list
+			        (with (p . xs) = list
+				      (:fun filter x) = (> x p)
+				      (nconc (qsort (remove-if #'filter xs))
+				             (list p)
+				             (qsort (remove-if-not #'filter xs)))))
 
 If function bindings appear in sequence without any non-function bindings in between, they are
 collected into a single labels form. This means that mutually recursive functions can be defined:
