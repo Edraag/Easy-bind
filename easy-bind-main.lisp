@@ -137,6 +137,30 @@ Form-name = CL form which expects function-like bindings."
   (and (symbolp x)
        (string= (symbol-name x) (symbol-name 'val))))
 
+(defun function-binding-p (x)
+  (and (consp x)
+       (function-keyword-p (car x))))
+
+(defun macro-binding-p (x)
+  (and (consp x)
+       (macro-keyword-p (car x))))
+
+(defun collect-labels-bindings (bindings)
+  (let ((labels-bindings 
+	 (collect-binding-list bindings #'function-binding-p)))
+    (loop for elt in labels-bindings do
+	 (setf (car elt) (cdar elt)))
+    (loop for elt in labels-bindings collect 
+	 (make-function-binding elt))))
+
+(defun collect-macrolet-bindings (bindings)
+  (let ((macrolet-bindings 
+	 (collect-binding-list bindings #'macro-binding-p)))
+    (loop for elt in macrolet-bindings do
+	 (setf (car elt) (cdar elt)))
+    (loop for elt in macrolet-bindings collect 
+	 (make-function-binding elt))))
+
 (defun generate-let*s-and-complex-bindings (bindings body)
   "Used by let+ to generate LET* and DESTRUCTURING-BIND/MULTIPLE-VALUE-BIND/LABELS/MACROLET 
 forms, with let* forms nested as needed to preserve order of evaluation."
@@ -154,22 +178,22 @@ forms, with let* forms nested as needed to preserve order of evaluation."
 		   (t
 		    (cond
 		      ((function-keyword-p (caaar bindings))
-		       (setf (caar bindings) (cdaar bindings))
-		       (let ((function-binding 
-			      (make-function-binding (car bindings))))
-			 (setf function-binding
-			       (single-splice-implicit-progn function-binding))
-			 `((labels (,function-binding)
-			     ,@(recur (cdr bindings) body)))))
+		       (let* ((labels-bindings
+			       (collect-labels-bindings bindings))
+			      (count (length labels-bindings)))
+			 (setf labels-bindings
+			       (function-bindings-splice-implicit-progn labels-bindings))
+			 `((labels ,labels-bindings
+			     ,@(recur (nthcdr count bindings) body)))))
 		      
 		      ((macro-keyword-p (caaar bindings))
-		       (setf (caar bindings) (cdaar bindings))
-		       (let ((function-binding 
-			      (make-function-binding (car bindings))))
-			 (setf function-binding
-			       (single-splice-implicit-progn function-binding))
-			 `((macrolet (,function-binding)
-			     ,@(recur (cdr bindings) body)))))
+		       (let* ((macrolet-bindings
+			       (collect-macrolet-bindings bindings))
+			      (count (length macrolet-bindings)))
+			 (setf macrolet-bindings
+			       (function-bindings-splice-implicit-progn macrolet-bindings))
+			 `((macrolet ,macrolet-bindings
+			     ,@(recur (nthcdr count bindings) body)))))
 		      
 		      ((values-keyword-p (caaar bindings))
 		       (setf (caar bindings) (cdaar bindings))

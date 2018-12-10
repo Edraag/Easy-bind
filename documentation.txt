@@ -25,7 +25,9 @@ binding.
 ------- BINDING CONSTRUCTS -------
 
 Easy-bind provides the macros let+, let-, multi-let, letfun, letfun-, letmatch, letmacro and letsym
-for binding local variables, functions and macros. `With' is an alias for let+.
+for binding local variables, functions and macros. `With' is an alias for let+. Let+/with is the
+most general form, which can be used to bind local variables, functions and macros within a single
+form. It will expand into 
 
 Example usage can be seen in the file easy-bind-test.lisp.
 
@@ -58,9 +60,10 @@ bindings.
 
 LET+ combines the functionality of let* and destructuring-bind. It can also bind local functions
 and macros and multiple return values if certain keywords are used in the car position of complex
-binding lists. It can be used as a general form for binding local variables. It expands into let*
-and destructuring-bind forms, where let* forms are nested only as needed to preserve order of 
-evaluation, and optionally into nested labels, macrolet and multiple-value-bind forms.
+binding lists. It can be used as a general form for binding local variables, functions and macros.
+It expands into let* and destructuring-bind forms, where let* forms are nested only as needed to
+preserve order of evaluation, and optionally into (possibly nested) labels, macrolet and 
+multiple-value-bind forms.
 
     (let+ (x y z) = '(1 2 3)
 	     u = (+ x y)
@@ -92,11 +95,25 @@ for binding multiple return values, local functions and local macros, respective
 	                     1
 			     (* n (fac (- n 1))))
 	  (:val a b) = (values 1 2)
-	  (fac (+ x a b)))
+	  (:macro square x) =
+	         (let+ g = (gensym)
+		   `(let+ ,g = ,x
+		     (* ,g ,g)))
+	  (fac (square (+ x a b))))
 
-Each keyword-initiated form will expand into a single lables/macrolet/multiple-value-bind form. 
-This means that mutually recursive functions can not be defined with let+. Letfun must be used to
-define mutually recursive functions (see below).
+If function bindings appear in sequence without any non-function bindings in between, they are
+collected into a single labels form. This means that mutually recursive functions can be defined:
+
+    (with x = 9
+	  y = 5
+          (:fun is-even n) = (if (zerop n) t
+				 (is-odd (- n 1)))
+	  (:fun is-odd n)  = (if (zerop n) nil
+				 (is-even (- n 1)))
+	  (and (is-odd x)
+	       (not (is-even y))))
+
+Similarly, a sequence of macro bindings will be collected into a single macrolet form.
 
 Like with letfun and letmacro, functions and macros bound with let+ obtain an "implicit progn" by
 sequencing forms in a surrounding list. See under LETFUN below.
@@ -116,7 +133,7 @@ it, like let, binds multiple variables in parallel:
 prints "x = 5, y = 9".
 
 MULTI-LET works like let+ except that complex bindings are used to bind multiple values rather than
-destructuring ,and that it does not accept keywords. Example:
+destructuring, and that it does not accept keywords. Example:
 
     (multi-let (a b) = (floor pi)
    	p = (+ a b)

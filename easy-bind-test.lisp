@@ -43,6 +43,11 @@
 			   1
 			   (* n (fac (- n 1))))
 	n = (fac 5)
+	(:fun is-even n) = (if (zerop n) t
+			       (is-odd (- n 1)))
+	(:fun is-odd n)  = (if (zerop n) nil
+			       (is-even (- n 1)))
+	
 	;; Body of let+ starts here
 	(assert  (= (car e) k v 5))
 	(assert	 (= (cadr e) l w 6))
@@ -56,6 +61,8 @@
 	(assert  (= 1000000 v1-squared))
 	(assert  (= v1-squared v1-macro-squared))
 	(assert  (= n 120))
+	(assert  (is-even n))
+	(assert  (not (is-odd n)))
 	(when *verbose* (format t "Let+ seems "))
 	(when *verbose* (format t "to be "))
 	(when *verbose* (format t "working~%"))
