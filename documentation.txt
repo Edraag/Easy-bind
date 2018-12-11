@@ -319,7 +319,7 @@ One possible use case for letmatch is writing recursive functions that operate o
 
     (qsort list) = (letmatch list
                     () => ()
-	            (p . xs) =>
+                    (p . xs) =>
                       (nconc (qsort (remove-if (lambda (x) (> x p)) xs))
 			     (list p)
 			     (qsort (remove-if-not (lambda (x) (> x p)) xs))))
@@ -392,8 +392,8 @@ the following will not work:
 	   (* n (funcall fact (- n 1)))))
       (funcall fact 4))
 
-because the variable fact is not defined until after the binding expression is closed. Letfun must
-be used to write local recursive functions.
+because the variable fact is not defined until after the binding expression is closed. Letfun or
+the :fun keyword in a let+/with form must be used to write local recursive functions.
 
 Note on declarations: Due to the fact that macroexpansion may create nested scopes, if the body
 contains a declaration pertaining to variables bound in a complex binding, this complex binding 
