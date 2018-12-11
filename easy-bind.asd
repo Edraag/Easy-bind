@@ -23,5 +23,5 @@
   :serial t
   :components ((:file "easy-bind-package")
 	       (:file "easy-bind-main")
-	       (:file "letmatch")
-	       (:file "easy-bind-test")))
+	       (:file "letmatch")))
+
