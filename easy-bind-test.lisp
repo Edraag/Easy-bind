@@ -39,10 +39,10 @@
 					 (* ,g ,g)))
 	v1-macro-squared = (macro-square v1)
 	(z . u) = '(80 . 90)
-	(:fun fac n) = (if (zerop n)
+	(:fun fact n) = (if (zerop n)
 			   1
-			   (* n (fac (- n 1))))
-	n = (fac 5)
+			   (* n (fact (- n 1))))
+	n = (fact 5)
 	(:fun is-even n) = (if (zerop n) t
 			       (is-odd (- n 1)))
 	(:fun is-odd n)  = (if (zerop n) nil

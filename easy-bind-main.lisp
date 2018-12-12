@@ -146,8 +146,12 @@ Form-name = CL form which expects function-like bindings."
        (macro-keyword-p (car x))))
 
 (defun collect-function-bindings (bindings predicate)
+  "Used to collect binding pairs where the first element is a list which begins with a
+keyword like :fun or :macro, and transforming these to bindings which can be used by
+forms like labels and macrolet. Collects bindings only as long as they satisfy predicate."
   (let ((function-bindings 
 	 (collect-binding-list bindings predicate)))
+    ; Get rid of initial keyword
     (loop for elt in function-bindings do
 	 (setf (car elt) (cdar elt)))
     (loop for elt in function-bindings collect 
@@ -155,7 +159,7 @@ Form-name = CL form which expects function-like bindings."
 
 (defun generate-let*s-and-complex-bindings (bindings body)
   "Used by let+ to generate LET* and DESTRUCTURING-BIND/MULTIPLE-VALUE-BIND/LABELS/MACROLET 
-forms, with let* forms nested as needed to preserve order of evaluation."
+forms, nested as needed to preserve order of evaluation."
   (labels ((recur (bindings body)
 	     (cond ((null bindings)
 		    body)
@@ -165,7 +169,7 @@ forms, with let* forms nested as needed to preserve order of evaluation."
 		      `((let* ,let-bindings
 			  ,@(recur (nthcdr count bindings) body)))))
 		   ; Extra level of parens needed because body must be spliced in at the end of the recursion,
-		   ; so nested let* and <form-name> forms must also be spliced. Thus the outer fn returns the
+		   ; so nested let* and other forms must also be spliced. Thus the outer fn returns the
 		   ; car of the list.
 		   (t
 		    (let ((first-symbol (caaar bindings)))
@@ -228,6 +232,9 @@ forms, with let* forms nested as needed to preserve order of evaluation."
 ;; ----------- Binding macros -----------
 
 (defmacro let+ (&rest forms)
+  "Expands into LET* and DESTRUCTURING-BIND forms, and optionally into LABELS, MACROLET and
+MULTIPLE-VALUE-BIND forms when appropriate keywords are given, or a PROGN if no bindings are
+given. Forms nested as needed to preserve order of evaluation."
   (multiple-value-bind
 	(bindings count)
       (parse-separated-list forms 
@@ -239,8 +246,8 @@ forms, with let* forms nested as needed to preserve order of evaluation."
 	  (generate-let*s-and-complex-bindings bindings body)))))
 
 (defmacro multi-let (&rest forms)
-  "Expands into LET* and MULTIPLE-VALUE-BIND forms, LET*s nested if needed to preserve order of evaluation,
-or a PROGN form if no bindings are given."
+  "Expands into LET* and MULTIPLE-VALUE-BIND forms, LET*s nested if needed to preserve order of
+ evaluation, or a PROGN form if no bindings are given."
   (multiple-value-bind 
 	(bindings count) 
       (parse-separated-list forms 
