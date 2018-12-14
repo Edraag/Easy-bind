@@ -24,7 +24,7 @@ binding.
 
 ------- BINDING CONSTRUCTS -------
 
-Easy-bind provides the macros let+, let-, multi-let, letfun, letfun-, letmatch, letmacro and letsym
+Easy-bind provides the macros let+, let-, letval, letfun, letfun-, letmatch, letmacro and letsym
 for binding local variables, functions and macros. `With' is an alias for let+. Let+/with is the
 most general form, which can be used to bind local variables, functions and macros within a single
 form. 
@@ -49,9 +49,22 @@ prints "x = 5 y = 1 z = (2 3)". Easy-bind adopts the two basic forms "simple-bin
 "complex-binding" using the equals sign (as in loop, := and = are synonyms - = is used in the 
 following examples). It does not use any of the other "syntactic keywords" used in the loop 
 facility, such as `with', `and' or `do' (although `with' is provided as a synonym for let+). The
-body of the form is understood to begin after the last binding.
+body of the form begins after the right-hand side of the last binding and always contains an
+"implicit progn", i.e. forms will be evaluated in sequence and the value of the last form in the
+body will be returned as the value of the binding form.
 
-The binding constructs let+, multi-let, letfun and letmacro allow the free intermixing of simple 
+The general form of each binding form is:
+
+    (<form-name> <symbol | list> = <expr>
+                 ...
+		 <symbol | list> = <expr>
+		 <body-form-1>
+		 ...
+		 <body-form-n>)
+		 
+where <symbol | list> indicates either a symbol or a list.
+
+The binding constructs let+, letval, letfun and letmacro allow the free intermixing of simple 
 and complex bindings. When only given simple bindings they macroexpand into a single let* form. 
 When given no bindings, they expand into a progn. They differ in their interpretation of complex 
 bindings.
@@ -125,7 +138,18 @@ collected into a single labels form. This means that mutually recursive function
 Similarly, a sequence of macro bindings will be collected into a single macrolet form.
 
 Like with letfun and letmacro, functions and macros bound with let+ obtain an "implicit progn" by
-sequencing forms in a surrounding list. See under LETFUN below.
+sequencing forms in the right-hand side of the binding in a surrounding list. See under LETFUN 
+below.
+
+The forms letval, letfun and letmacro are equivalent to let+ with an "implicit keyword" :val, :fun
+or :macro, respectively, in the complex binding lists. Thus the following pairs of forms are
+equivalent:
+
+    (eb:let+ (:val q r) = (truncate 13 4) (list q r))
+    (eb:letval (q r) = (truncate 13 4) (list q r))
+    
+    (eb:let+ (:fun 2+ x) = (+ x 2) x = 3 (2+ x))
+    (eb:letfun (2+ x) = (+ x 2) x = 3 (2+ x))
 
 WITH is a synonym for let+. It is thus similar to the `with' keyword in the loop facility, except it 
 does not expect or accept other "keyword symbols" like `and' or `do' outside of the car position of
@@ -141,14 +165,14 @@ it, like let, binds multiple variables in parallel:
 	  
 prints "x = 5, y = 9".
 
-MULTI-LET works like let+ except that complex bindings are used to bind multiple values rather than
-destructuring, and that it does not accept keywords. Example:
+LETVAL works like let+ except that complex bindings are used to bind multiple values rather than
+destructuring, and that it does not accept keywords. It is similar to Racket's `let-values'.
 
-    (multi-let (a b) = (floor pi)
-               p = (+ a b)
-               (x y) = (floor (exp 1))
-               e = (+ x y)
-               (expt e (* p (complex 0 1))))
+    (letval (a b) = (floor pi)
+            p = (+ a b)
+            (x y) = (floor (exp 1))
+            e = (+ x y)
+            (expt e (* p (complex 0 1))))
 
 macroexpands into:
 
@@ -161,6 +185,7 @@ macroexpands into:
            (EXPT E (* P (COMPLEX 0 1)))))))
 
 Since left-hand lists are used for binding multiple return values, it can not do destructuring.
+Multi-let is a synonym for letval.
 
 LETFUN combines the functionality of let* and labels. It uses left-hand lists to bind local 
 functions. If only given complex bindings, it expands into a single labels form. Otherwise let* and
@@ -169,14 +194,14 @@ labels forms will be nested as needed to preserve order of evaluation.
 Example:
 
     (letfun (square x) = (* x x)
-	     x = 1
-	     y = 2
-	     (y n) = (+ n 1)
-	     (fact n) = (case n
-			  (0 1)
-			  (t (* n (fact (1- n)))))
-	     n = (+ x y)
-	     (fact (square (y n))))
+	    x = 1
+	    y = 2
+	    (y n) = (+ n 1)
+	    (fact n) = (case n
+                         (0 1)
+                         (t (* n (fact (1- n)))))
+	    n = (+ x y)
+	    (fact (square (y n))))
 
 macroexpands into:
 
@@ -348,10 +373,10 @@ enclosing list to obtain an "implicit progn".
 
 --- Scope ---
 
-For the "serial" binding forms let+, multi-let, letfun, letmacro and letsym, every variable binding
-is lexically in scope from the point where it is defined until the binding form is closed. In
-letfun, local functions that are defined in sequence without any variable definitions occurring in
-between are visible to each other: 
+For the "serial" binding forms let+, letval, letfun and letmacro every variable binding is
+lexically in scope from the point where it is defined until the binding form is closed. In letfun, 
+and in let+/with using the :fun keyword, local functions that are defined in sequence without any
+variable definitions occurring in between are visible to each other: 
 
     (letfun (f x) = (+ x 1)
 		    (letfun (g x) = (- (f x) 1)
@@ -408,6 +433,7 @@ following form to your .emacs:
 			  ("\\_<let\\-\\_>" . font-lock-keyword-face)
 			  ("\\_<with\\_>" . font-lock-keyword-face)
 			  ("\\_<letsym\\_>" . font-lock-keyword-face)
+			  ("\\_<letval\\_>" . font-lock-keyword-face)
 			  ("\\_<letmacro\\_>" . font-lock-keyword-face)
 			  ("\\_<letfun\\_>" . font-lock-keyword-face)
 			  ("\\_<letfun\\-\\_>" . font-lock-keyword-face)

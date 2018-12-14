@@ -245,7 +245,7 @@ given. Forms nested as needed to preserve order of evaluation."
 	  `(progn ,@body)
 	  (generate-let*s-and-complex-bindings bindings body)))))
 
-(defmacro multi-let (&rest forms)
+(defmacro letval (&rest forms)
   "Expands into LET* and MULTIPLE-VALUE-BIND forms, LET*s nested if needed to preserve order of
  evaluation, or a PROGN form if no bindings are given."
   (multiple-value-bind 
@@ -324,3 +324,6 @@ or a PROGN form if no bindings are given."
 
 (defmacro with (&rest forms)
   `(let+ ,@forms))
+
+(defmacro multi-let (&rest forms)
+  `(letval ,@forms))

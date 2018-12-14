@@ -62,10 +62,9 @@
   (or (atom x) (listp x)))
 
 (defmacro letmatch (key-expr &body body)
-  "Conditionally expands into a let+ form when list/tree structure of key-expr
-matches left-hand side of arrow-separated argument pair in body, or into a form
-with no bound variables if left-hand side is t or if it is nil and matches a 
-null key-expr."
+  "Conditional form of let+ which expands into a cond form where the test-forms are calls to
+`matches' to check if the structure of each binding-list in the body matches that of key-expr.
+The first binding-list that matches is bound to key-expr in a let+ form (at runtime)."
   (letmatch-body-check-wellformedness body)
   (let+ cond-clauses = (parse-separated-list body 
 					     #'structure-p

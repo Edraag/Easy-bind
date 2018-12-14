@@ -22,12 +22,13 @@
   (:use :common-lisp)
   (:nicknames :easy-bind
 	      :eb)
-  (:export :multi-let
-	   :let+
-	   :let-
-	   :letfun
-	   :letfun-
-	   :letmacro
-	   :letsym
-	   :letmatch
-	   :with))
+  (:export #:let+
+	   #:let-
+	   #:letval
+	   #:letfun
+	   #:letfun-
+	   #:letmacro
+	   #:letsym
+	   #:letmatch
+	   #:multi-let
+	   #:with))
