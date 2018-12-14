@@ -99,9 +99,11 @@
 				   square)
 		m = (square n)
 		n = v
-		(fact n) = (case n 
-			     (0 1)
-			     (t (* n (fact (1- n)))))
+		(fact n) = ((declare ((integer 0 *) n))
+			    (case n 
+			      (0 1)
+			      (t (* n (fact (1- n))))))
+		
 		(add &rest args) = (apply #'+ args)
 		(f x) = (add x m)
 		list = '(1 2 3 4 5 6 7 8 9 10)
@@ -155,6 +157,14 @@
 		(is-even n) = (if (zerop n) t
 				  (is-odd (1- n)))
 	      
+		(take n list) = ((declare ((integer 0 *) n))
+				 (letmatch list
+				   () => ()
+				   (x . xs) => (case n 
+						 (0 nil)
+						 (t (cons x (take (- n 1) xs))))))
+		smaller-list = (take 5 sorted-list)
+		
 		closure = (letfun count  = 0
 				  (incr) = ((incf count)
 					    (when *verbose* 
@@ -199,6 +209,7 @@
 		
 		(when *verbose* (format t "sorted-list = ~a ~%" sorted-list))
 		(when *verbose* (format t "no-duplicate-sorted-list = ~a ~%" no-duplicate-sorted-list))
+		(when *verbose* (format t "smaller-list = ~a ~%" smaller-list))
 		(when *verbose* (format t "last-elt = ~a ~%" last-elt))
 		(when *verbose* (format t "sum-list = ~a ~%" sum-list))
 		(when *verbose* (format t "second-sorted-list = ~a ~%" second-sorted-list))
