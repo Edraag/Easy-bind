@@ -26,6 +26,10 @@ Easy-bind is available from Quicklisp: (ql:quickload :easy-bind)
 Note that the version available on Quicklisp as of December 2018 does not recognize the letval
 macro - multi-let must be used instead (it is identical except for the name).
 
+All names belong to the package edraag.easy-bind, which has nicknames easy-bind and eb. To use the
+provided binding forms, after loading Easy-bind either do (use-package :easy-bind) or prefix each
+name with eb:<name>.
+
 ------- BINDING CONSTRUCTS -------
 
 Easy-bind provides the macros let+, let-, letval, letfun, letfun-, letmatch, letmacro and letsym
