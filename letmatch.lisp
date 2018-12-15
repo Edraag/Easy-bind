@@ -64,7 +64,9 @@
 (defmacro letmatch (key-expr &body body)
   "Conditional form of let+ which expands into a cond form where the test-forms are calls to
 `matches' to check if the structure of each binding-list in the body matches that of key-expr.
-The first binding-list that matches is bound to key-expr in a let+ form (at runtime)."
+The body should consist of pairs of binding-lists and forms separated by a fat-arrow (=>).
+The first binding-list that matches is bound to key-expr in a let+ form (at runtime), its
+right-hand form becoming the body of the let+ form."
   (letmatch-body-check-wellformedness body)
   (let+ cond-clauses = (parse-separated-list body 
 					     #'structure-p
