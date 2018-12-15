@@ -131,6 +131,9 @@ for binding multiple return values, local functions and local macros, respective
                            (qsort (remove-if-not #'filter xs)))))
           (qsort *a*))
 
+The syntax for function and macro definitions is similar to Scheme's `define' and other functional 
+languages in that the formal parameters simply follow the name of the function/macro.
+
 If function bindings appear in sequence without any non-function bindings in between, they are
 collected into a single labels form. This means that mutually recursive functions can be defined:
 
@@ -158,6 +161,9 @@ equivalent:
     
     (eb:let+ (:fun 2+ x) = (+ x 2) x = 3 (2+ x))
     (eb:letfun (2+ x) = (+ x 2) x = 3 (2+ x))
+    
+Note that the left-hand side of a fuction definition is similar in form to an application of the
+same function (modulo keyword) - as it should for the equals sign to imply "is the same as". 
 
 WITH is a synonym for let+. It is thus similar to the `with' keyword in the loop facility, except it 
 does not expect or accept other "keyword symbols" like `and' or `do' outside of the car position of
@@ -374,8 +380,8 @@ enclosing list to obtain an "implicit progn".
     (letmatch list
       ()  => ()
       (x) => ((format t "The list contains a ")
-      	      (format t "single element ")
-	      (format t "and that element is ~a~%" x))
+              (format t "single element ")
+              (format t "and that element is ~a~%" x))
       t   => ((format t "Contrary to my expectations, ")
               (format t "the list contains more than one element.~%" )))
 
@@ -387,18 +393,18 @@ and in let+/with using the :fun keyword, local functions that are defined in seq
 variable definitions occurring in between are visible to each other: 
 
     (letfun (f x) = (+ x 1)
-		    (letfun (g x) = (- (f x) 1)
-			    (f x) = (* x 100)
-			    (g 3)))
+            (letfun (g x) = (- (f x) 1)
+                    (f x) = (* x 100)
+                    (g 3)))
 
 returns 299, not 3. The following form, however, returns 3:
 
     (letfun (f x) = (+ x 1)
-		    (letfun (g x) = (- (f x) 1)
-			    x = 3
-			    (f x) = (* x 100)
-			    (g x)))
-			    
+            (letfun (g x) = (- (f x) 1)
+                    x = 3
+                    (f x) = (* x 100)
+                    (g x)))
+   
 because the inner f is not visible to g due to the nesting of labels and let* forms in the 
 expansion.
 
