@@ -43,6 +43,16 @@
 			   1
 			   (* n (fact (- n 1))))
 	n = (fact 5)
+	(:macro macro-fact n) = (letfun 
+				 (fact n) = ((format t "~&compile-time: n = ~a~%" n)
+					     (if (zerop n)
+						 1
+						 (* n (fact (- n 1)))))
+				 k = (fact n)
+				 (format t "~&compile-time: k = ~a ~%" k)
+				 k)
+	m = (macro-fact 5) ; Only works with literal number! Computed at compile-time.
+	
 	(:fun is-even n) = (if (zerop n) t
 			       (is-odd (- n 1)))
 	(:fun is-odd n)  = (if (zerop n) nil
@@ -60,7 +70,8 @@
 	(assert  (= 3000 (+ v1 v2)))
 	(assert  (= 1000000 v1-squared))
 	(assert  (= v1-squared v1-macro-squared))
-	(assert  (= n 120))
+	(assert  (= n m 120))
+	(when *verbose* (format t "k = ~a~%" k))
 	(assert  (is-even n))
 	(assert  (not (is-odd n)))
 	(when *verbose* (format t "Let+ seems "))
@@ -158,11 +169,11 @@
 				  (is-odd (1- n)))
 	      
 		(take n list) = ((declare ((integer 0 *) n))
-				 (letmatch list
-				   () => ()
-				   (x . xs) => (case n 
-						 (0 nil)
-						 (t (cons x (take (- n 1) xs))))))
+				 (when list
+				   (with (x . xs) = list
+					 (case n 
+					   (0 nil)
+					   (t (cons x (take (- n 1) xs)))))))
 		smaller-list = (take 5 sorted-list)
 		
 		closure = (letfun count  = 0
@@ -233,8 +244,8 @@
 		  (with g = (gensym)
 			`(let- ,g = ,x
 			       (* ,g ,g)))
-		  (macro-add &rest args) = ((format nil "Going to add up some args...")
-					    (format nil "This will not be printed..." )
+		  (macro-add &rest args) = ((format t "~%Making an addition form...~%")
+					    (format t "This should be printed at compile time...~%")
 					    `(+ ,@args))
 		  x = 5
 		  y = (macro-square (macro-add x s))
