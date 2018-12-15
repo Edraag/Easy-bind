@@ -21,6 +21,10 @@ bind and flet/labels/macrolet. It adopts the "paren-free" equational syntax for 
 variables from the loop facility, and generalizes it to a simple domain-specific language for local 
 binding.
 
+Easy-bind is available from Quicklisp: (ql:quickload :easy-bind)
+
+Note that the version available on Quicklisp as of December 2018 does not recognize the letval
+macro - multi-let must be used instead (it is identical except for the name).
 
 ------- BINDING CONSTRUCTS -------
 
