@@ -162,7 +162,7 @@ equivalent:
     (eb:let+ (:fun 2+ x) = (+ x 2) x = 3 (2+ x))
     (eb:letfun (2+ x) = (+ x 2) x = 3 (2+ x))
     
-Note that the left-hand side of a fuction definition is similar in form to an application of the
+Note that the left-hand side of a function definition is similar in form to an application of the
 same function (modulo keyword) - as it should for the equals sign to imply "is the same as". 
 
 WITH is a synonym for let+. It is thus similar to the `with' keyword in the loop facility, except it 
