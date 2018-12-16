@@ -137,6 +137,10 @@ Form-name = CL form which expects function-like bindings."
   (and (symbolp x)
        (string= (symbol-name x) (symbol-name 'val))))
 
+(defun all-keyword-p (x)
+  (and (symbolp x)
+       (string= (symbol-name x) (symbol-name 'all))))
+
 (defun function-binding-p (x)
   (and (consp x)
        (function-keyword-p (car x))))
@@ -196,6 +200,17 @@ forms, nested as needed to preserve order of evaluation."
 			 (setf (caar bindings) (cdaar bindings))
 			 `((multiple-value-bind ,@(car bindings)
 			       ,@(recur (cdr bindings) body))))
+			
+			((all-keyword-p first-symbol)
+			 (setf (caar bindings) (cdaar bindings))
+			 (destructuring-bind (x y) (car bindings)
+			   (let ((value (gensym))
+				 (value-list (gensym))
+				 (number (length x)))
+			     `((let* ((,value ,y)
+				      (,value-list (make-list ,number :initial-element ,value)))
+				 (destructuring-bind ,x ,value-list 
+				   ,@(recur (cdr bindings) body)))))))
 			(t
 			 `((destructuring-bind ,@(car bindings)
 			       ,@(recur (cdr bindings) body))))))))))

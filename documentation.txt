@@ -24,7 +24,8 @@ binding.
 Easy-bind is available from Quicklisp: (ql:quickload :easy-bind)
 
 Note that the version available on Quicklisp as of December 2018 does not recognize the letval
-macro - multi-let must be used instead (it is identical except for the name).
+macro - multi-let must be used instead (it is identical except for the name). It also does not
+recognize the :all keyword in let+/with forms.
 
 All names belong to the package edraag.easy-bind, which has nicknames easy-bind and eb. To use the
 provided binding forms, after loading Easy-bind either do (use-package :easy-bind) or prefix each
@@ -109,8 +110,10 @@ macroexpands into:
           (PRINT C))))
 
 and prints 3, 5 and 15. The left-hand-side of a complex binding allows everything destructuring-bind
-allows, such as &optional, &rest etc. The keywords that can be supplied are :val, :fun and :macro
-for binding multiple return values, local functions and local macros, respectively:
+allows, such as &optional, &rest etc. 
+
+The keywords :val, :fun and :macro enable the binding of multiple return values, local functions
+and local macros, respectively:
 
     (let+ x = 9
           (:fun fac n) = (if (zerop n)
@@ -133,7 +136,9 @@ for binding multiple return values, local functions and local macros, respective
           (qsort *a*))
 
 The syntax for function and macro definitions is similar to Scheme's `define' and other functional 
-languages in that the formal parameters simply follow the name of the function/macro.
+languages in that the formal parameters simply follow the name of the function/macro (the lambda
+list is the rest of the list following the name). &rest, &optional, &key etc. arguments can be used
+as in labels or macrolet.
 
 If function bindings appear in sequence without any non-function bindings in between, they are
 collected into a single labels form. This means that mutually recursive functions can be defined:
@@ -152,6 +157,15 @@ Similarly, a sequence of macro bindings will be collected into a single macrolet
 Like with letfun and letmacro, functions and macros bound with let+ obtain an "implicit progn" by
 sequencing forms in the right-hand side of the binding in a surrounding list. See under LETFUN 
 below.
+
+The :all keyword can be used to bind several variables to the same value:
+
+    (with
+      (:all x y z) = 0
+      (list x y z))
+      
+will return (0 0 0). This is similar to writing x = y = z = 0 in a language like C or Python. The
+right-hand side will only be evaluated once.
 
 The forms letval, letfun and letmacro are equivalent to let+ with an "implicit keyword" :val, :fun
 or :macro, respectively, in the complex binding lists. Thus the following pairs of forms are

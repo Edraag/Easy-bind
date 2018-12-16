@@ -58,6 +58,9 @@
 	(:fun is-odd n)  = (if (zerop n) nil
 			       (is-even (- n 1)))
 	
+	(:all x1 x2 x3) = (macro-fact 6)
+	(:all y1 y2 y3) = 0
+	
 	;; Body of let+ starts here
 	(assert  (= (car e) k v 5))
 	(assert	 (= (cadr e) l w 6))
@@ -74,6 +77,8 @@
 	(when *verbose* (format t "k = ~a~%" k))
 	(assert  (is-even n))
 	(assert  (not (is-odd n)))
+	(assert  (= x1 x2 x3 720))
+	(assert  (= y1 y2 y3 0))
 	(when *verbose* (format t "Let+ seems "))
 	(when *verbose* (format t "to be "))
 	(when *verbose* (format t "working~%"))
