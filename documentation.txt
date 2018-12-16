@@ -54,12 +54,13 @@ Example:
 	   	    (format t "x = ~d y = ~d z = ~d~%" x y z))
 		    
 prints "x = 5 y = 1 z = (2 3)". Easy-bind adopts the two basic forms "simple-binding" and 
-"complex-binding" using the equals sign (as in loop, := and = are synonyms - = is used in the 
-following examples). It does not use any of the other "syntactic keywords" used in the loop 
-facility, such as `with', `and' or `do' (although `with' is provided as a synonym for let+). The
-body of the form begins after the right-hand side of the last binding and always contains an
-"implicit progn", i.e. forms will be evaluated in sequence and the value of the last form in the
-body will be returned as the value of the binding form.
+"complex-binding" using the equals sign as separator between left and right hand sides of the 
+bindings. As in loop, := and = are synonyms. Easy-bind does not use any of the other "syntactic
+keywords" used in the loop facility, such as `and' or `do'.
+
+The body of the binding form begins after the right-hand side of the last binding pair and always
+contains an "implicit progn", i.e. forms will be evaluated in sequence and the value of the last
+form in the body will be returned as the value of the binding form.
 
 The general form of each binding form is:
 
