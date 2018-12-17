@@ -109,7 +109,7 @@
 		(when *verbose* (format t "working.~%")))
 		   
 	(letfun n = 13
-		(square x) = (with square = (* x x)
+		(square x) = (with square being (* x x)
 				   (when *verbose* (format t "Squaring ~a, " x))
 				   (when *verbose* (format t "result = ~a ~%" square))
 				   square)
@@ -334,9 +334,9 @@
 		  (when *verbose* (format t "Letmatch seems to be working~%")))
 	
 	(assert (= x 60))
-	(with x = 42
+	(with x being 42
 	      (assert (= x 42))
-	      (with x = 1
+	      (with x being 1
 		    (assert (= x 1)))
 	      (assert (= x 42)))
 	(assert (= x 60))
@@ -344,5 +344,5 @@
         t))
 
 (defun test-easy-bind-silent ()
-  (with *verbose* = nil
+  (with *verbose* being nil
 	(test-easy-bind)))

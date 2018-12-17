@@ -21,7 +21,9 @@
 
 (defun equals-sign-p (x)
   (and (symbolp x)
-       (string= (symbol-name x) "=")))
+       (or (string= (symbol-name x) "=")
+	   (string= (symbol-name x) (symbol-name 'be))
+	   (string= (symbol-name x) (symbol-name 'being)))))
 
 (defun simple-left-hand-side-p (x)
   (symbolp x))

@@ -57,7 +57,9 @@ Example:
 prints "x = 5 y = 1 z = (2 3)". Easy-bind adopts the two basic forms "simple-binding" and 
 "complex-binding" using the equals sign as separator between left and right hand sides of the 
 bindings. As in loop, := and = are synonyms. Easy-bind does not use any of the other "syntactic
-keywords" used in the loop facility, such as `and' or `do'.
+keywords" used in the loop facility, such as `and' or `do'. For those who prefer to speak to the
+computer in English, `be' and `being' are recognized as synonyms for the equals sign (though not by
+the version currently on Quicklisp).
 
 The body of the binding form begins after the right-hand side of the last binding pair and always
 contains an "implicit progn", i.e. forms will be evaluated in sequence and the value of the last
@@ -160,12 +162,11 @@ below.
 
 The :all keyword can be used to bind several variables to the same value:
 
-    (with
-      (:all x y z) = 0
+    (with (:all x y z) = 0
       (list x y z))
-      
-will return (0 0 0). This is similar to writing x = y = z = 0 in a language like C or Python. The
-right-hand side will only be evaluated once.
+
+will return (0 0 0). This is similar to writing x = y = z = 0 in Python. The right-hand side will
+only be evaluated once.
 
 The forms letval, letfun and letmacro are equivalent to let+ with an "implicit keyword" :val, :fun
 or :macro, respectively, in the complex binding lists. Thus the following pairs of forms are
