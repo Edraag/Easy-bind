@@ -25,7 +25,8 @@ Easy-bind is available from Quicklisp: (ql:quickload :easy-bind)
 
 Note that the version available on Quicklisp as of December 2018 does not recognize the letval
 macro - multi-let must be used instead (it is identical except for the name). It also does not
-recognize the :all keyword in let+/with forms.
+recognize the :all or :sym keywords in let+/with forms, or the be/being synonyms for the equals
+sign.
 
 All names belong to the package edraag.easy-bind, which has nicknames easy-bind and eb. To use the
 provided binding forms, after loading Easy-bind either do (use-package :easy-bind) or prefix each
@@ -58,8 +59,7 @@ prints "x = 5 y = 1 z = (2 3)". Easy-bind adopts the two basic forms "simple-bin
 "complex-binding" using the equals sign as separator between left and right hand sides of the 
 bindings. As in loop, := and = are synonyms. Easy-bind does not use any of the other "syntactic
 keywords" used in the loop facility, such as `and' or `do'. For those who prefer to speak to the
-computer in English, `be' and `being' are recognized as synonyms for the equals sign (though not by
-the version currently on Quicklisp).
+computer in English, `be' and `being' are recognized as synonyms for the equals sign.
 
 The body of the binding form begins after the right-hand side of the last binding pair and always
 contains an "implicit progn", i.e. forms will be evaluated in sequence and the value of the last
@@ -167,6 +167,18 @@ The :all keyword can be used to bind several variables to the same value:
 
 will return (0 0 0). This is similar to writing x = y = z = 0 in Python. The right-hand side will
 only be evaluated once.
+
+The :sym keyword can be used to bind symbol-macros. The right-hand side must then be an unquoted
+list literal, and the symbols in the left-hand side will be bound to the corresponding expression
+in the right-hand list:
+
+    (let+
+      (:sym sum avg) = ((+ a b)
+                        (/ sum 2))
+      (+ sum avg))
+
+Beware that symbol-macros merely give a name to the corresponding expression, they are not 
+variables. This means the expression will be evaluated everywhere the symbol occurs in the code.
 
 The forms letval, letfun and letmacro are equivalent to let+ with an "implicit keyword" :val, :fun
 or :macro, respectively, in the complex binding lists. Thus the following pairs of forms are
@@ -303,7 +315,13 @@ LETSYM expands into a single symbol-macrolet form. Example:
 
     (letsym x = (format t "Expanded x!~%")
             y = (format t "Expanded y!~%")
-            x y)
+	    (sum avg) = ((+ a b)
+                         (/ sum 2))
+            x y (list sum avg))
+
+Like with the :sym keyword in a let+ form (see above), symbols can be collected in a list. The
+right-hand side must then be an unquoted list literal, and the symbols in the left-hand list are
+bound to the corresponding expression in the right-hand list.
 
 LETMATCH is a conditional version of let+. It takes a form as its first argument, expected to be a
 list form, and matches its structure against the left-hand-sides of its remaining arguments. The

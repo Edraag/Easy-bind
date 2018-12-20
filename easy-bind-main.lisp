@@ -143,6 +143,10 @@ Form-name = CL form which expects function-like bindings."
   (and (symbolp x)
        (string= (symbol-name x) (symbol-name 'all))))
 
+(defun sym-keyword-p (x)
+  (and (symbolp x)
+       (string= (symbol-name x) (symbol-name 'sym))))
+
 (defun function-binding-p (x)
   (and (consp x)
        (function-keyword-p (car x))))
@@ -203,6 +207,11 @@ forms, nested as needed to preserve order of evaluation."
 			 `((multiple-value-bind ,@(car bindings)
 			       ,@(recur (cdr bindings) body))))
 			
+			((sym-keyword-p first-symbol)
+			 (setf (caar bindings) (cdaar bindings))
+			 `((symbol-macrolet ,(generate-symbol-macrolet-bindings (list (car bindings)))
+			     ,@(recur (cdr bindings) body))))
+			
 			((all-keyword-p first-symbol)
 			 (setf (caar bindings) (cdaar bindings))
 			 (destructuring-bind (x y) (car bindings)
@@ -245,6 +254,18 @@ forms, nested as needed to preserve order of evaluation."
 (defun generate-let*s-and-multiple-value-binds (bindings body)
   "Used by multi-let to generate LET* and MULTIPLE-VALUE-BIND forms."
   (generate-let*s-and-<binding-name> bindings body 'multiple-value-bind))
+
+(defun generate-symbol-macrolet-bindings (bindings)
+  (loop for binding in bindings
+     with collected = ()
+     do (let ((car (car binding))
+	      (cadr (cadr binding)))
+	  (when (symbolp car)
+	    (push binding collected))
+	  (when (consp car)
+	    (loop for i below (length car) do
+		 (push `(,(nth i car) ,(nth i cadr)) collected))))
+     finally (return (nreverse collected))))
 
 ;; ----------- Binding macros -----------
 
@@ -332,12 +353,14 @@ or a PROGN form if no bindings are given."
   (multiple-value-bind
 	(bindings count)
       (parse-separated-list forms 
-			    #'simple-left-hand-side-p 
+			    #'simple-or-complex-left-hand-side-p 
 			    #'equals-sign-p)
     (let ((body (nthcdr count forms)))
       (if (null bindings)
 	  `(progn ,@body)
-	  `(symbol-macrolet ,bindings ,@body)))))
+	  `(symbol-macrolet 
+	       ,(generate-symbol-macrolet-bindings bindings)
+	     ,@body)))))
 
 (defmacro with (&rest forms)
   `(let+ ,@forms))

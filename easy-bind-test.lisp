@@ -61,6 +61,9 @@
 	(:all x1 x2 x3) = (macro-fact 6)
 	(:all y1 y2 y3) = 0
 	
+	(:sym sum avg) = ((+ x1 y1)
+                          (/ sum 2))
+	
 	;; Body of let+ starts here
 	(assert  (= (car e) k v 5))
 	(assert	 (= (cadr e) l w 6))
@@ -79,6 +82,7 @@
 	(assert  (not (is-odd n)))
 	(assert  (= x1 x2 x3 720))
 	(assert  (= y1 y2 y3 0))
+	(assert  (= avg 360))
 	(when *verbose* (format t "Let+ seems "))
 	(when *verbose* (format t "to be "))
 	(when *verbose* (format t "working~%"))
@@ -233,9 +237,9 @@
 		(assert (= last-elt (nth (1- length) sorted-list)))
 		(assert (= sum-list (reduce '+ sorted-list)))
 		
-		(letfun (square x) = ((when *verbose* (format t "Inner square now...~%")
-					    (format t "Not actually squaring ~d...~%" x))
-				      x)
+		(letfun (square x) be ((when *verbose* (format t "Inner square now...~%")
+					     (format t "Not actually squaring ~d...~%" x))
+				       x)
 			(assert (= (square 2) 2))
 			(assert (= x 60)))
 		(assert (= (square 2) 4))
@@ -276,9 +280,9 @@
 	(letsym   x = (when *verbose* (format t "x expanded.~%"))
 		  y = (when *verbose* (format t "y expanded.~%"))
 		  z = (when *verbose* (format t "z expanded.~%"))
-		  a = 8 b = 9
-		  sum = (+ a b)
-		  avg = (/ sum 2)
+		  (a b) = (8 9)
+		  (sum avg) = ((+ a b)
+			       (/ sum 2))
 		  ;; Body of letsym starts here
 		  x y z
 		  (assert (= 17 sum))
