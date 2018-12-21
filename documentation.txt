@@ -87,8 +87,8 @@ LET+ combines the functionality of let* and destructuring-bind. It can also bind
 and macros and multiple return values if certain keywords are used in the car position of complex
 binding lists. It can be used as a general form for binding local variables, functions and macros.
 It expands into let* and destructuring-bind forms, where let* forms are nested only as needed to
-preserve order of evaluation, and optionally into (possibly nested) labels, macrolet and 
-multiple-value-bind forms.
+preserve order of evaluation, and optionally into (possibly nested) labels, macrolet, symbol-
+macrolet and multiple-value-bind forms.
 
     (let+ (x y z) = '(1 2 3)
           u = (+ x y)
@@ -193,9 +193,25 @@ equivalent:
 Note that the left-hand side of a function definition is similar in form to an application of the
 same function (modulo keyword) - as it should for the equals sign to imply "is the same as". 
 
-WITH is a synonym for let+. It is thus similar to the `with' keyword in the loop facility, except it 
-does not expect or accept other "keyword symbols" like `and' or `do' outside of the car position of
-complex binding lists, and that it binds in series rather than in parallel.
+WITH is a synonym for let+. It is thus similar to the `with' keyword in the loop facility, except
+it does not expect or accept other "keyword symbols" like `and' or `do' outside of the car position
+of complex binding lists, and that it binds in series rather than in parallel.
+
+The pair with ... being, where `being' is a synonym for the equals sign, can be used to signal that 
+the variable will retain its initial value throughout the body of the form, or that it will make no 
+sense to mutate it:
+
+    (square x) = (with square being (* x x)
+                   (format t "squaring ~a...~%" x)
+		   (format t "done! result = ~a~%" square)
+		   square)
+
+Similarly when shadowing a special variable:
+
+    (with *verbose* being nil
+      (test-easy-bind))
+
+There is no enforcing of immutability though.
 
 LET- only accepts simple bindings and expands into a single let form. It differs from let+ in that
 it, like let, binds multiple variables in parallel:

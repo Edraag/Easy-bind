@@ -191,11 +191,11 @@
 					      (format t "Closure: The count is now: ~a ~%" count))
 					    count)
 				  #'incr)
-		   
+		
 		;; Body of letfun starts here
 		(letfun- (f x) = (* x 100)
 			 (g x) = (f x)
-			 (square x) = (with square = (* x x)
+			 (square x) = (with square being (* x x)
 					    (when *verbose* (format t "Another square function... ~%" ))
 					    (when *verbose* (format t "Squaring away... ~%" ))
 					    (when *verbose* (format t "(square ~a) = ~a ~%" x square))
@@ -237,9 +237,9 @@
 		(assert (= last-elt (nth (1- length) sorted-list)))
 		(assert (= sum-list (reduce '+ sorted-list)))
 		
-		(letfun (square x) be ((when *verbose* (format t "Inner square now...~%")
-					     (format t "Not actually squaring ~d...~%" x))
-				       x)
+		(letfun (square x) = ((when *verbose* (format t "Inner square now...~%")
+					    (format t "Not actually squaring ~d...~%" x))
+				      x)
 			(assert (= (square 2) 2))
 			(assert (= x 60)))
 		(assert (= (square 2) 4))
