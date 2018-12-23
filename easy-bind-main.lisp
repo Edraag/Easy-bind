@@ -271,9 +271,9 @@ forms, nested as needed to preserve order of evaluation."
 ;; ----------- Binding macros -----------
 
 (defmacro let+ (&rest forms)
-  "Expands into LET* and DESTRUCTURING-BIND forms, and optionally into LABELS, MACROLET and
-MULTIPLE-VALUE-BIND forms when appropriate keywords are given, or a PROGN if no bindings are
-given. Forms nested as needed to preserve order of evaluation."
+  "Expands into LET* and DESTRUCTURING-BIND forms, and optionally into LABELS, MACROLET,
+MULTIPLE-VALUE-BIND and SYMBOL-MACROLET forms when appropriate keywords are given, or a 
+PROGN if no bindings are given. Forms nested as needed to preserve order of evaluation."
   (multiple-value-bind
 	(bindings count)
       (parse-separated-list forms 
