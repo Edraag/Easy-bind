@@ -39,7 +39,7 @@ for binding local variables, functions and macros. `With' is an alias for let+. 
 most general form, which can be used to bind local variables, functions and macros within a single
 form. 
 
-Example usage can be seen in the file easy-bind-test.lisp.
+Example usage can be seen in the files example-code.lisp and easy-bind-test.lisp.
 
 Easy-Bind's binding constructs adopt the syntax of local bindings used in Common Lisp's loop 
 facility. These bindings have two basic forms:
@@ -197,7 +197,7 @@ WITH is a synonym for let+. It is thus similar to the `with' keyword in the loop
 it does not expect or accept other "keyword symbols" like `and' or `do' outside of the car position
 of complex binding lists, and that it binds in series rather than in parallel.
 
-The following forms are thus equivalent:
+Using Easy-bind, the following forms are equivalent:
 
     (loop with list = '((1 3) (4 3) (2 4) (5 3) (5 6) (3 1))
           for (a b) in list collect (+ a b))

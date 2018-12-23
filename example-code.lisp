@@ -12,7 +12,7 @@
 ;;
 ;;
 
-;; A simple infix reader showing the use of destructuring in a with form
+;; ------- A simple infix reader showing the use of destructuring in a with form -------
 
 (defparameter *previous-readtables* nil)
 (defparameter *infix-syntax*        nil)
@@ -72,4 +72,14 @@
   (when *infix-syntax*
     (setq *readtable* (pop *previous-readtables*))
     (setq *infix-syntax* nil)))
+
+;; ------- Simple quicksort implementation -------
+
+(defun qsort (list)
+  (when list
+    (with (p . xs) = list
+	  (:fun filter x) = (> x p)
+	  (nconc (qsort (remove-if #'filter xs))
+		 (list p)
+		 (qsort (remove-if-not #'filter xs))))))
 
