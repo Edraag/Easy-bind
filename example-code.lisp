@@ -17,6 +17,7 @@
 (defparameter *previous-readtables* nil)
 (defparameter *infix-syntax*        nil)
 
+;; First version - without letmatch
 (defun read-infix (input-stream char)
   (declare (ignore char))
   (with list = (read-delimited-list #\] input-stream t)
@@ -26,15 +27,37 @@
 	      ((null arg2)     (list operator arg1))
 	      ((null rest)     (list operator arg1 arg2))
 	      (t
-	       (with rest-operands being
+	       (with rest being (rest list) 
+		     rest-operands being
 		     (loop
-			for pair on (cdr list) by #'cddr
-			unless (cdr pair) do
+			for (symbol operand) on rest by #'cddr
+			unless operand do
 			  (error "Malformed infix expression - operand must follow operator")
-			unless (eq operator (car pair)) do
+			unless (eq symbol operator) do
 			  (error "Malformed infix expression - only one operator allowed")
-			collect (cadr pair))
+			collect operand)
 		     (list* operator arg1 rest-operands))))))
+
+;; Read-infix using letmatch to pattern-match the input list
+(defun read-infix (input-stream char)
+  (declare (ignore char))
+  (with list = (read-delimited-list #\] input-stream t)
+	(letmatch list 
+	  () => ()
+	  (x) => x
+	  (operator arg) => (list operator arg)
+	  (arg1 operator arg2) => (list operator arg1 arg2)
+	  (arg1 . rest) =>
+	  (with operator being (first rest)
+		rest-operands being
+		(loop
+		   for (symbol operand) on rest by #'cddr
+		   unless operand do
+		     (error "Malformed infix expression - operand must follow operator")
+		   unless (eq symbol operator) do
+		     (error "Malformed infix expression - only one operator allowed")
+		   collect operand)
+		(list* operator arg1 rest-operands)))))
 
 (defun enable-infix ()
   "Enable infix expressions like [1 + 2 + 3]."
