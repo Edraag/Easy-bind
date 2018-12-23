@@ -34,31 +34,32 @@
 	x = 60
 	y = 70
 	v1-squared = (square v1)
-	(:macro macro-square x) = (with g = (gensym)
-				  `(let+ ,g = ,x
-					 (* ,g ,g)))
-	v1-macro-squared = (macro-square v1)
+	(:macro inline-square x) = (with g = (gensym)
+					 `(let+ ,g = ,x
+						(* ,g ,g)))
+	v1-inline-squared = (inline-square v1)
 	(z . u) = '(80 . 90)
 	(:fun fact n) = (if (zerop n)
-			   1
-			   (* n (fact (- n 1))))
+			    1
+			    (* n (fact (- n 1))))
 	n = (fact 5)
-	(:macro macro-fact n) = (letfun 
-				 (fact n) = ((format t "~&compile-time: n = ~a~%" n)
-					     (if (zerop n)
-						 1
-						 (* n (fact (- n 1)))))
-				 k = (fact n)
-				 (format t "~&compile-time: k = ~a ~%" k)
-				 k)
-	m = (macro-fact 5) ; Only works with literal number! Computed at compile-time.
+	
+	(:macro compile-time-fact n) = 
+	(letfun (fact n) = ((format t "~&compile-time: n = ~a~%" n)
+			    (if (zerop n)
+				1
+				(* n (fact (- n 1)))))
+		k = (fact n)
+		(format t "~&compile-time: k = ~a ~%" k)
+		k)
+	m = (compile-time-fact 5) ; Only works with literal number! Computed at compile-time.
 	
 	(:fun is-even n) = (if (zerop n) t
 			       (is-odd (- n 1)))
 	(:fun is-odd n)  = (if (zerop n) nil
 			       (is-even (- n 1)))
 	
-	(:all x1 x2 x3) = (macro-fact 6)
+	(:all x1 x2 x3) = (compile-time-fact 6)
 	(:all y1 y2 y3) = 0
 	
 	(:sym sum avg) = ((+ x1 y1)
@@ -75,7 +76,7 @@
 	(assert  (= (+ x y z u) 300))
 	(assert  (= 3000 (+ v1 v2)))
 	(assert  (= 1000000 v1-squared))
-	(assert  (= v1-squared v1-macro-squared))
+	(assert  (= v1-squared v1-inline-squared))
 	(assert  (= n m 120))
 	(when *verbose* (format t "k = ~a~%" k))
 	(assert  (is-even n))
