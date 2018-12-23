@@ -466,12 +466,12 @@ returns 299, not 3. The following form, however, returns 3:
 because the inner f is not visible to g due to the nesting of labels and let* forms in the 
 expansion.
 
-For local macros defined with letmacro (as with macrolet which it expands into), results are
-undefined if they reference any bindings defined within the local scope. See 
-http://www.lispworks.com/documentation/HyperSpec/Body/s_flet_.htm
+For local macros defined with letmacro or the :macro keyword in let+/with (as with macrolet which
+they expand into), results are undefined if they reference any bindings defined within the local
+scope. See http://www.lispworks.com/documentation/HyperSpec/Body/s_flet_.htm
 
-Binding expressions in the "serial" binding forms can always refer to variables bound above them
-within the binding form.
+Binding expressions in the "serial" binding forms can otherwise always refer to variables bound
+above them within the binding form.
 
 Let- and letfun- bind in parallel, and the bindings are only in scope inside the body of the form. 
 
