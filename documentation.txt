@@ -166,14 +166,18 @@ The :all keyword can be used to bind several variables to the same value:
 will return (0 0 0). This is similar to writing x = y = z = 0 in Python. The right-hand side will
 only be evaluated once.
 
-The :sym keyword can be used to bind symbol-macros. The right-hand side must then be an unquoted
-list literal, and the symbols in the left-hand side will be bound to the corresponding expression
-in the right-hand list:
+The :sym keyword can be used to bind symbol-macros. If there is more than one symbol following the
+:sym keyword in the left-hand list, the right-hand side must be an unquoted list literal, and the
+symbols in the left-hand side will be bound to the corresponding expression in the right-hand list:
 
     (let+
       (:sym sum avg) = ((+ a b)
                         (/ sum 2))
       (+ sum avg))
+
+If there is only one symbol, the right-hand side must be a single expression:
+
+    (let+ (:sym message) = (format t "Printing the message!~%"))
 
 Beware that symbol-macros merely give a name to the corresponding expression, they are not 
 variables. This means the expression will be evaluated everywhere the symbol occurs in the code.

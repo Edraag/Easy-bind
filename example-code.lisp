@@ -43,9 +43,9 @@
   (declare (ignore char))
   (with list = (read-delimited-list #\] input-stream t)
 	(letmatch list 
-	  () => ()
-	  (x) => x
-	  (operator arg) => (list operator arg)
+	  ()                   => ()
+	  (x)                  => x
+	  (operator arg)       => (list operator arg)
 	  (arg1 operator arg2) => (list operator arg1 arg2)
 	  (arg1 . rest) =>
 	  (with operator being (first rest)

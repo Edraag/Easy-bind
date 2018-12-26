@@ -266,9 +266,11 @@ forms, nested as needed to preserve order of evaluation."
 	  (when (symbolp car)
 	    (push binding collected))
 	  (when (consp car)
-	    (loop for i in car
-	       for j in cadr
-	       do (push (list i j) collected))))
+	    (if (null (cdr car))
+		(push (list (car car) cadr) collected)
+		(loop for i in car
+		   for j in cadr
+		   do (push (list i j) collected)))))
      finally (return (nreverse collected))))
 
 ;; ----------- Binding macros -----------

@@ -64,6 +64,7 @@
 	
 	(:sym sum avg) = ((+ x1 y1)
                           (/ sum 2))
+	(:sym message) = (format t "Printing the message!~%")
 	
 	;; Body of let+ starts here
 	(assert  (= (car e) k v 5))
@@ -84,6 +85,7 @@
 	(assert  (= x1 x2 x3 720))
 	(assert  (= y1 y2 y3 0))
 	(assert  (= avg 360))
+	(when *verbose* message)
 	(when *verbose* (format t "Let+ seems "))
 	(when *verbose* (format t "to be "))
 	(when *verbose* (format t "working~%"))
