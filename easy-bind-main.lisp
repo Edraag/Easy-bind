@@ -21,9 +21,12 @@
 
 (defun equals-sign-p (x)
   (and (symbolp x)
+       (string= (symbol-name x) "=")))
+
+(defun equals-sign-or-being-p (x)
+  (and (symbolp x)
        (or (string= (symbol-name x) "=")
-	   (string= (symbol-name x) (symbol-name 'be))
-	   (string= (symbol-name x) (symbol-name 'being)))))
+	   (string= (symbol-name x) 'being))))
 
 (defun simple-left-hand-side-p (x)
   (symbolp x))
@@ -284,6 +287,18 @@ PROGN if no bindings are given. Forms nested as needed to preserve order of eval
 	  `(progn ,@body)
 	  (generate-let*s-and-complex-bindings bindings body)))))
 
+(defmacro with (&rest forms)
+  "Like let+, but accepts `being' or `:being' as a synonym for the equals sign."
+  (multiple-value-bind
+	(bindings count)
+      (parse-separated-list forms 
+			    #'simple-or-complex-left-hand-side-p 
+			    #'equals-sign-or-being-p)
+    (let ((body (nthcdr count forms)))
+      (if (null bindings)
+	  `(progn ,@body)
+	  (generate-let*s-and-complex-bindings bindings body)))))
+
 (defmacro letval (&rest forms)
   "Expands into LET* and MULTIPLE-VALUE-BIND forms, LET*s nested if needed to preserve order of
  evaluation, or a PROGN form if no bindings are given."
@@ -362,9 +377,6 @@ or a PROGN form if no bindings are given."
 	  `(symbol-macrolet 
 	       ,(generate-symbol-macrolet-bindings bindings)
 	     ,@body)))))
-
-(defmacro with (&rest forms)
-  `(let+ ,@forms))
 
 (defmacro multi-let (&rest forms)
   `(letval ,@forms))

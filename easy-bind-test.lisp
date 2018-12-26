@@ -112,7 +112,7 @@
 		(when *verbose* (format t "Letval seems "))
 		(when *verbose* (format t "to be "))
 		(when *verbose* (format t "working.~%")))
-		   
+	
 	(letfun n = 13
 		(square x) = (with square being (* x x)
 				   (when *verbose* (format t "Squaring ~a, " x))
