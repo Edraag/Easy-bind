@@ -259,18 +259,20 @@ forms, nested as needed to preserve order of evaluation."
   (generate-let*s-and-<binding-name> bindings body 'multiple-value-bind))
 
 (defun generate-symbol-macrolet-bindings (bindings)
-  (loop for binding in bindings
+  (loop for (left right) in bindings
      with collected = ()
-     do (let ((car (car binding))
-	      (cadr (cadr binding)))
-	  (when (symbolp car)
-	    (push binding collected))
-	  (when (consp car)
-	    (if (null (cdr car))
-		(push (list (car car) cadr) collected)
-		(loop for i in car
-		   for j in cadr
-		   do (push (list i j) collected)))))
+     do 
+       (progn (when (symbolp left)
+		(push (list left right) collected))
+	      (when (consp left)
+		(if (null (rest left))
+		    (push (list (first left) right) collected)
+		    (if (and (consp right)
+			     (= (length left) (length right)))
+			(loop for i in left
+			   for j in right
+			   do (push (list i j) collected))
+			(error "Malformed right-hand side in symbol-macro binding")))))
      finally (return (nreverse collected))))
 
 ;; ----------- Binding macros -----------
