@@ -2,12 +2,12 @@
   ---------- EASY-BIND - Easy local binding for Common Lisp ----------
 
 
- Version 1.0
+ Version 1.1
  Copyright (C) Marius Gaarde 2018. All rights reserved. Licensed under the MIT license.
 
- THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
- INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
- AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
 
@@ -15,18 +15,18 @@
 ------- OVERVIEW -------
 
 Easy-bind is a collection of macros that make the binding of local variables, functions and macros 
-in Common Lisp more convenient. In particular it reduces/automates the nesting resulting from the 
-combined use of let/let* forms with other binding forms like destructuring-bind, multiple-value-
-bind and flet/labels/macrolet. It adopts the "paren-free" equational syntax for binding local 
+in Common Lisp more convenient. It adopts the "paren-free" equational syntax for binding local 
 variables from the loop facility, and generalizes it to a simple domain-specific language for local 
-binding.
+binding. It provides a facility for easily defining new binding forms that use a similar paren-
+reduced syntax.
 
 Easy-bind is available from Quicklisp: (ql:quickload :easy-bind)
 
 Note that the version available on Quicklisp as of December 2018 does not recognize the letval
 macro - multi-let must be used instead (it is identical except for the name). It also does not
 recognize the :all or :sym keywords in let+/with forms, or the `being' synonym for the equals
-sign in with forms.
+sign in with forms. Finally, it does not include the define-binding-form macro for easily defining
+new binding forms.
 
 All names belong to the package edraag.easy-bind, which has nicknames easy-bind and eb. To use the
 provided binding forms, after loading Easy-bind either do (use-package :easy-bind) or prefix each
@@ -36,7 +36,9 @@ name with eb:<name>.
 
 Easy-bind provides the macros let+, with, let-, letval, letfun, letfun-, letmatch, letmacro and
 letsym for binding local variables, functions and macros. Let+ and with are the most general forms,
-which can be used to bind local variables, functions and macros within a single form. 
+which can be used to bind local variables, functions and macros within a single form. It also
+provides the macro define-binding-form for defining new binding constructs which follow the outline
+of the provided forms.
 
 Example usage can be seen in the files example-code.lisp and easy-bind-test.lisp.
 
@@ -499,7 +501,53 @@ contains a declaration pertaining to variables bound in a complex binding, this 
 should appear last in the series of bindings. If the declaration pertains to variables bound in
 simple bindings, these should appear after the last complex binding.
 
-Emacs: To have the Easy-bind binding forms syntax-highlighted as "keywords" in Emacs, add the
+--- Defining new binding constructs ---
+
+The binding forms described above, with the exception of letmatch, are defined with the macro
+define-binding-form. For example, the definition for let+ is:
+
+    (define-binding-form let+ 
+      :left-hand-pred #'simple-or-complex-left-hand-side-p 
+      :separator-pred #'equals-sign-p
+      :form-generator #'generate-let+-expansion)
+
+As can be seen, all that needs to be provided is a name and three functions: a predicate for 
+determining what forms are allowed as left-hand sides, a predicate for determining what is to be
+considered as separator between left and right hand sides, and a function for generating code from
+the resulting binding pairs and body. The macro will expand into a defmacro form which creates a 
+macro with a variadic lambda list: (DEFMACRO LET+ (&REST FORMS) ...)
+
+Given the two predicates, the generated macro will provide from its argument list two new lists:
+a list of binding pairs ((a1 b1) ... (an bn)) and a body consisting of the code that follows the
+last binding right-hand side in the argument list. The form-generator function must be a function
+of two arguments, the binding list and the body. As an example, consider the definition of the
+simplest binding form, let-:
+    
+    (define-binding-form let-
+      :left-hand-pred #'simple-left-hand-side-p 
+      :separator-pred #'equals-sign-p
+      :form-generator (lambda (bindings body) `(let ,bindings ,@body)))
+      
+As let- is simply syntactic sugar for let, the form-generator function just returns a single let
+form. To understand how it works, consider a simple form like the following:
+
+    (let- x = 9
+          y = 8
+	  (format t "x = ~a, y = ~a~%" x y)
+	  (+ x y))
+
+The predicate simple-left-hand-side-p only recognizes symbols as left-hand sides in bindings, while
+equals-sign-p recognizes the symbols = and := as separator. When parsing the above form, let- will
+thus generate the binding list ((x 9) (y 8)) and the body 
+((format t "x = ~a, y = ~a~%" x y) (+ x y)), resulting in the final macro expansion:
+
+    (LET ((X 9) (Y 8))
+      (FORMAT T "x = ~a, y = ~a~%" X Y)
+      (+ X Y))
+
+--- Emacs ---
+
+To have the Easy-bind binding forms syntax-highlighted as "keywords" in Emacs, add the
 following form to your .emacs:
 
     (font-lock-add-keywords 'lisp-mode

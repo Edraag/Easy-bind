@@ -1,16 +1,16 @@
 
 ;;; ---------- EASY-BIND - Easy local binding for Common Lisp ----------
 ;;
-;; Version 1.0
+;; Version 1.1
 ;; Copyright (C) Marius Gaarde 2018. All rights reserved. Licensed under the MIT license.
 ;;
-;; THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-;; INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
-;; AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+;; THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+;; BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+;; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 ;; DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
 ;;
-;;
+;; 
 
 (in-package :edraag.easy-bind)
 
@@ -106,30 +106,6 @@ as a, c, ... satisfies predicate."
 	     (list* x y (car z))
 	     function-binding)))
 
-(defun generate-let*s-and-function-bindings (bindings body form-name)
-  "Used by letfun and letmacro to generate LET* and LABELS/MACROLET forms, nested as needed to 
-preserve order of evaluation.
-Form-name = CL form which expects function-like bindings."
-  (labels ((recur (bindings body)
-	     (cond ((null bindings)
-		    body)
-		   ((simple-left-hand-side-p (caar bindings))
-		    (let* ((let-bindings (generate-let-binding-list bindings))
-			   (count (length let-bindings)))
-		      `((let* ,let-bindings
-			  ,@(recur (nthcdr count bindings) body)))))
-		   ; Extra level of parens needed because body must be spliced in at the end of the recursion,
-		   ; so nested let* and <form-name> forms must also be spliced. Thus the outer fn returns the
-		   ; car of the list.
-		   (t
-		    (let* ((function-bindings (generate-function-binding-list bindings))
-			   (count (length function-bindings)))
-		      (setf function-bindings
-			    (function-bindings-splice-implicit-progn function-bindings))
-		      `((,form-name ,function-bindings
-				    ,@(recur (nthcdr count bindings) body))))))))
-    (car (recur bindings body))))
-
 (defun function-keyword-p (x)
   (and (symbolp x)
        (string= (symbol-name x) (symbol-name 'fun))))
@@ -158,7 +134,47 @@ Form-name = CL form which expects function-like bindings."
   (and (consp x)
        (macro-keyword-p (car x))))
 
-(defun collect-function-bindings (bindings predicate)
+(defun generate-let*s-and-complex-bindings (bindings body 
+					    complex-binding-collector)
+  "Generates a LET* form as long as it can collect simple bindings, and
+complex bindings into a form or forms determined by complex-binding-collector, 
+alternately until binding list exhausted, at which point body is spliced 
+into the innermost form. Complex-binding-collector must be a function which 
+takes the binding list as argument and returns 3 values: 1) a form-name, 
+2) a list of bindings to give to the form, 3) the number of bindings it lays 
+claim to."
+  (labels ((recur (bindings body) 
+	     (cond ((null bindings)
+		    body)
+		   ((simple-left-hand-side-p (caar bindings))
+		    (let* ((let-bindings (generate-let-binding-list bindings))
+			   (count (length let-bindings)))
+		      `((let* ,let-bindings
+			  ,@(recur (nthcdr count bindings) body)))))
+		   ; Extra level of parens needed because body must be spliced in at the end of the recursion,
+		   ; so nested let* and other forms must also be spliced. Thus the outer fn returns the
+		   ; car of the list.
+		   ((all-keyword-p (caaar bindings))
+		    (setf (caar bindings) (cdaar bindings))
+		    (destructuring-bind (x y) (car bindings)
+		      (let ((value (gensym))
+			    (value-list (gensym))
+			    (number (length x)))
+			`((let* ((,value ,y)
+				 (,value-list (make-list ,number :initial-element ,value)))
+			    (destructuring-bind ,x ,value-list
+			      ,@(recur (cdr bindings) body)))))))
+		    (t
+		     (multiple-value-bind (form-name complex-binding-list count)
+			 (funcall complex-binding-collector bindings)
+		       (if (search (symbol-name 'bind) (symbol-name form-name))
+			   `((,form-name ,@complex-binding-list
+					 ,@(recur (nthcdr count bindings) body)))
+			   `((,form-name ,complex-binding-list
+					 ,@(recur (nthcdr count bindings) body)))))))))
+    (car (recur bindings body))))
+
+(defun let+-collect-function-bindings (bindings predicate)
   "Used to collect binding pairs where the first element is a list which begins with a
 keyword like :fun or :macro, and transforming these to bindings which can be used by
 forms like labels and macrolet. Collects bindings only as long as they satisfy predicate."
@@ -170,93 +186,61 @@ forms like labels and macrolet. Collects bindings only as long as they satisfy p
     (loop for elt in function-bindings collect 
 	 (make-function-binding elt))))
 
-(defun generate-let*s-and-complex-bindings (bindings body)
-  "Used by let+ to generate LET* and DESTRUCTURING-BIND/MULTIPLE-VALUE-BIND/LABELS/MACROLET 
-forms, nested as needed to preserve order of evaluation."
-  (labels ((recur (bindings body)
-	     (cond ((null bindings)
-		    body)
-		   ((simple-left-hand-side-p (caar bindings))
-		    (let* ((let-bindings (generate-let-binding-list bindings))
-			   (count (length let-bindings)))
-		      `((let* ,let-bindings
-			  ,@(recur (nthcdr count bindings) body)))))
-		   ; Extra level of parens needed because body must be spliced in at the end of the recursion,
-		   ; so nested let* and other forms must also be spliced. Thus the outer fn returns the
-		   ; car of the list.
-		   (t
-		    (let ((first-symbol (caaar bindings)))
-		      (cond
-			((function-keyword-p first-symbol)
-			 (let* ((labels-bindings
-				 (collect-function-bindings bindings #'function-binding-p))
-				(count (length labels-bindings)))
-			   (setf labels-bindings
-				 (function-bindings-splice-implicit-progn labels-bindings))
-			   `((labels ,labels-bindings
-			       ,@(recur (nthcdr count bindings) body)))))
-		      
-			((macro-keyword-p first-symbol)
-			 (let* ((macrolet-bindings
-				 (collect-function-bindings bindings #'macro-binding-p))
-				(count (length macrolet-bindings)))
-			   (setf macrolet-bindings
-				 (function-bindings-splice-implicit-progn macrolet-bindings))
-			   `((macrolet ,macrolet-bindings
-			       ,@(recur (nthcdr count bindings) body)))))
-		      
-			((values-keyword-p first-symbol)
-			 (setf (caar bindings) (cdaar bindings))
-			 `((multiple-value-bind ,@(car bindings)
-			       ,@(recur (cdr bindings) body))))
-			
-			((sym-keyword-p first-symbol)
-			 (setf (caar bindings) (cdaar bindings))
-			 `((symbol-macrolet ,(generate-symbol-macrolet-bindings (list (car bindings)))
-			     ,@(recur (cdr bindings) body))))
-			
-			((all-keyword-p first-symbol)
-			 (setf (caar bindings) (cdaar bindings))
-			 (destructuring-bind (x y) (car bindings)
-			   (let ((value (gensym))
-				 (value-list (gensym))
-				 (number (length x)))
-			     `((let* ((,value ,y)
-				      (,value-list (make-list ,number :initial-element ,value)))
-				 (destructuring-bind ,x ,value-list 
-				   ,@(recur (cdr bindings) body)))))))
-			(t
-			 `((destructuring-bind ,@(car bindings)
-			       ,@(recur (cdr bindings) body))))))))))
-    (car (recur bindings body))))
+(defun collect-let+-complex-bindings (bindings)
+  (let ((first-symbol (caaar bindings)))
+    (cond
+      ((function-keyword-p first-symbol)
+       (let ((labels-bindings
+	       (let+-collect-function-bindings bindings #'function-binding-p)))
+	 (setf labels-bindings
+	       (function-bindings-splice-implicit-progn labels-bindings))
+	 (values 'labels labels-bindings (length labels-bindings))))
+      
+      ((macro-keyword-p first-symbol)
+       (let ((macrolet-bindings
+	      (let+-collect-function-bindings bindings #'macro-binding-p)))
+	 (setf macrolet-bindings
+	       (function-bindings-splice-implicit-progn macrolet-bindings))
+	 (values 'macrolet macrolet-bindings (length macrolet-bindings))))
+      
+      ((values-keyword-p first-symbol)
+       (setf (caar bindings) (cdaar bindings))
+       (values 'multiple-value-bind (car bindings) 1))
+      
+      ((sym-keyword-p first-symbol)
+       (setf (caar bindings) (cdaar bindings))
+       (let ((symbol-macrolet-bindings 
+	      (generate-symbol-macrolet-bindings (list (car bindings)))))
+	 (values 'symbol-macrolet symbol-macrolet-bindings 1)))
+      
+      (t
+       (values 'destructuring-bind (car bindings) 1)))))
 
 (defun generate-let*s-and-labels (bindings body)
-  (generate-let*s-and-function-bindings bindings body 'labels))
+  (flet ((collector (bindings)
+	   (let ((labels-bindings 
+		  (generate-function-binding-list bindings)))
+	     (setf labels-bindings (function-bindings-splice-implicit-progn labels-bindings))
+	     (values 'labels labels-bindings (length labels-bindings)))))
+    (generate-let*s-and-complex-bindings bindings body #'collector)))
 
 (defun generate-let*s-and-macrolets (bindings body)
-  (generate-let*s-and-function-bindings bindings body 'macrolet))
+  (flet ((collector (bindings)
+	   (let ((macrolet-bindings 
+		  (generate-function-binding-list bindings)))
+	     (setf macrolet-bindings (function-bindings-splice-implicit-progn macrolet-bindings))
+	     (values 'macrolet macrolet-bindings (length macrolet-bindings)))))
+    (generate-let*s-and-complex-bindings bindings body #'collector)))
 
-(defun generate-let*s-and-<binding-name> (bindings body binding-name)
-  "Generates LET* forms and <binding-name> forms, LET* forms nested as needed to preserve order of evaluation."
-  (labels ((recur (bindings body) 
-	     (cond ((null bindings)
-		    body)
-		   ((simple-left-hand-side-p (caar bindings))
-		    (let* ((let-bindings (generate-let-binding-list bindings))
-			   (count (length let-bindings)))
-		      `((let* ,let-bindings
-			  ,@(recur (nthcdr count bindings) body)))))
-		   ; Extra level of parens needed because body must be spliced in at the end of the recursion,
-		   ; so nested let* and <binding-name> forms must also be spliced. Thus the outer fn returns the
-		   ; car of the list.
-		   (t
-		    `((,binding-name ,@(car bindings)
-				     ,@(recur (cdr bindings) body)))))))
-    (car (recur bindings body))))
+(defun generate-let+-expansion (bindings body)
+  (generate-let*s-and-complex-bindings bindings body 
+				       #'collect-let+-complex-bindings))
 
 (defun generate-let*s-and-multiple-value-binds (bindings body)
   "Used by multi-let to generate LET* and MULTIPLE-VALUE-BIND forms."
-  (generate-let*s-and-<binding-name> bindings body 'multiple-value-bind))
+  (generate-let*s-and-complex-bindings bindings body
+				       (lambda (bindings)
+					 (values 'multiple-value-bind (car bindings) 1))))
 
 (defun generate-symbol-macrolet-bindings (bindings)
   (loop for (left right) in bindings
@@ -277,110 +261,66 @@ forms, nested as needed to preserve order of evaluation."
 
 ;; ----------- Binding macros -----------
 
-(defmacro let+ (&rest forms)
-  "Expands into LET* and DESTRUCTURING-BIND forms, and optionally into LABELS, MACROLET,
-MULTIPLE-VALUE-BIND and SYMBOL-MACROLET forms when appropriate keywords are given, or a 
-PROGN if no bindings are given. Forms nested as needed to preserve order of evaluation."
-  (multiple-value-bind
+(defmacro define-binding-form (name &key 
+				      left-hand-pred
+				      separator-pred
+				      form-generator)
+  `(defmacro ,name (&rest forms)
+     (multiple-value-bind
 	(bindings count)
       (parse-separated-list forms 
-			    #'simple-or-complex-left-hand-side-p 
-			    #'equals-sign-p)
+			    ,left-hand-pred
+			    ,separator-pred)
     (let ((body (nthcdr count forms)))
       (if (null bindings)
 	  `(progn ,@body)
-	  (generate-let*s-and-complex-bindings bindings body)))))
+	  (funcall ,form-generator bindings body))))))
 
-(defmacro with (&rest forms)
-  "Like let+, but accepts `being' or `:being' as a synonym for the equals sign."
-  (multiple-value-bind
-	(bindings count)
-      (parse-separated-list forms 
-			    #'simple-or-complex-left-hand-side-p 
-			    #'equals-sign-or-being-p)
-    (let ((body (nthcdr count forms)))
-      (if (null bindings)
-	  `(progn ,@body)
-	  (generate-let*s-and-complex-bindings bindings body)))))
+(define-binding-form let+ 
+    :left-hand-pred #'simple-or-complex-left-hand-side-p 
+    :separator-pred #'equals-sign-p
+    :form-generator #'generate-let+-expansion)
 
-(defmacro letval (&rest forms)
-  "Expands into LET* and MULTIPLE-VALUE-BIND forms, LET*s nested if needed to preserve order of
- evaluation, or a PROGN form if no bindings are given."
-  (multiple-value-bind 
-	(bindings count) 
-      (parse-separated-list forms 
-			    #'simple-or-complex-left-hand-side-p 
-			    #'equals-sign-p)
-    (let ((body (nthcdr count forms)))
-      (if (null bindings)
-	  `(progn ,@body)
-	  (generate-let*s-and-multiple-value-binds bindings body)))))
+(define-binding-form with
+    :left-hand-pred #'simple-or-complex-left-hand-side-p 
+    :separator-pred #'equals-sign-or-being-p
+    :form-generator #'generate-let+-expansion)
 
-(defmacro let- (&rest forms)
-  "Expands into a single LET form, or a PROGN if no bindings are given"
-  (multiple-value-bind
-	(bindings count)
-      (parse-separated-list forms 
-			    #'simple-left-hand-side-p 
-			    #'equals-sign-p)
-    (let ((body (nthcdr count forms)))
-      (if (null bindings)
-	  `(progn ,@body)
-	  `(let ,bindings ,@body)))))
+(define-binding-form letval
+    :left-hand-pred #'simple-or-complex-left-hand-side-p 
+    :separator-pred #'equals-sign-p
+    :form-generator #'generate-let*s-and-multiple-value-binds)
 
-(defmacro letfun (&rest forms)
-  "Expands into LET* and LABELS forms, nested if needed to preserve order of evaluation,
-or a PROGN form if no bindings are given."
-  (multiple-value-bind
-	(bindings count)
-      (parse-separated-list forms 
-			    #'simple-or-complex-left-hand-side-p 
-			    #'equals-sign-p)
-    (let ((body (nthcdr count forms)))
-      (if (null bindings)
-	  `(progn ,@body)
-	  (generate-let*s-and-labels bindings body)))))
+(define-binding-form let-
+    :left-hand-pred  #'simple-left-hand-side-p 
+    :separator-pred #'equals-sign-p
+    :form-generator (lambda (bindings body) `(let ,bindings ,@body)))
 
-(defmacro letfun- (&rest forms)
-  "Expands into a single FLET form, or a PROGN if no bindings are given"
-  (multiple-value-bind
-	(bindings count)
-      (parse-separated-list forms 
-			    #'complex-left-hand-side-p 
-			    #'equals-sign-p)
-    (let ((body (nthcdr count forms)))
-      (if (null bindings)
-	  `(progn ,@body)
-	  `(flet ,(function-bindings-splice-implicit-progn
-		   (generate-function-binding-list bindings)) 
-	     ,@body)))))
+(define-binding-form letfun
+    :left-hand-pred #'simple-or-complex-left-hand-side-p 
+    :separator-pred #'equals-sign-p
+    :form-generator #'generate-let*s-and-labels)
 
-(defmacro letmacro (&rest forms)
-  "Expands into LET* and MACROLET forms, nested if needed to preserve order of evaluation,
-or a PROGN form if no bindings are given."
-  (multiple-value-bind 
-	(bindings count)
-      (parse-separated-list forms 
-			    #'simple-or-complex-left-hand-side-p 
-			    #'equals-sign-p)
-    (let ((body (nthcdr count forms)))
-      (if (null bindings)
-	  `(progn ,@body)
-	  (generate-let*s-and-macrolets bindings body)))))
+(define-binding-form letfun-
+    :left-hand-pred #'simple-or-complex-left-hand-side-p 
+    :separator-pred #'equals-sign-p
+    :form-generator (lambda (bindings body) 
+		      `(flet ,(function-bindings-splice-implicit-progn
+			       (generate-function-binding-list bindings)) 
+			 ,@body)))
 
-(defmacro letsym (&rest forms)
-  "Expands into a single SYMBOL-MACROLET form, or a PROGN if no bindings are given"
-  (multiple-value-bind
-	(bindings count)
-      (parse-separated-list forms 
-			    #'simple-or-complex-left-hand-side-p 
-			    #'equals-sign-p)
-    (let ((body (nthcdr count forms)))
-      (if (null bindings)
-	  `(progn ,@body)
-	  `(symbol-macrolet 
-	       ,(generate-symbol-macrolet-bindings bindings)
-	     ,@body)))))
+(define-binding-form letmacro
+    :left-hand-pred #'simple-or-complex-left-hand-side-p 
+    :separator-pred #'equals-sign-p
+    :form-generator #'generate-let*s-and-macrolets)
+
+(define-binding-form letsym
+    :left-hand-pred #'simple-or-complex-left-hand-side-p 
+    :separator-pred #'equals-sign-p
+    :form-generator (lambda (bindings body)
+		      `(symbol-macrolet 
+			   ,(generate-symbol-macrolet-bindings bindings)
+			 ,@body)))
 
 (defmacro multi-let (&rest forms)
   `(letval ,@forms))
