@@ -88,7 +88,9 @@ as a, c, ... satisfies predicate."
 
 (defun generate-function-binding-list (bindings)
   (let ((function-bindings 
-	 (collect-binding-list bindings #'complex-left-hand-side-p)))
+	 (collect-binding-list bindings (lambda (x) (and (complex-left-hand-side-p x)
+							 (symbolp (car x))
+							 (not (all-keyword-p (car x))))))))
     (loop for elt in function-bindings collect (make-function-binding elt))))
 
 (defun generate-let-binding-list (bindings)
@@ -107,24 +109,19 @@ as a, c, ... satisfies predicate."
 	     function-binding)))
 
 (defun function-keyword-p (x)
-  (and (symbolp x)
-       (string= (symbol-name x) (symbol-name 'fun))))
+  (eq x :fun))
 
 (defun macro-keyword-p (x)
-  (and (symbolp x)
-       (string= (symbol-name x) (symbol-name 'macro))))
+  (eq x :macro))
 
 (defun values-keyword-p (x)
-  (and (symbolp x)
-       (string= (symbol-name x) (symbol-name 'val))))
+  (eq x :val))
 
 (defun all-keyword-p (x)
-  (and (symbolp x)
-       (string= (symbol-name x) (symbol-name 'all))))
+  (eq x :all))
 
 (defun sym-keyword-p (x)
-  (and (symbolp x)
-       (string= (symbol-name x) (symbol-name 'sym))))
+  (eq x :sym))
 
 (defun function-binding-p (x)
   (and (consp x)
@@ -212,7 +209,6 @@ forms like labels and macrolet. Collects bindings only as long as they satisfy p
        (let ((symbol-macrolet-bindings 
 	      (generate-symbol-macrolet-bindings (list (car bindings)))))
 	 (values 'symbol-macrolet symbol-macrolet-bindings 1)))
-      
       (t
        (values 'destructuring-bind (car bindings) 1)))))
 

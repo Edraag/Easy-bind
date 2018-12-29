@@ -58,6 +58,9 @@
 	(:fun is-odd n)  = (if (zerop n) nil
 			       (is-even (- n 1)))
 	
+	;; This time, a destructuring variable list (no keyword)
+	(fun is-odd n) = (list "fun" 1 n)
+	
 	(:all x1 x2 x3) = (compile-time-fact 6)
 	(:all y1 y2 y3) = 0
 	
@@ -81,6 +84,8 @@
 	(when *verbose* (format t "k = ~a~%" k))
 	(assert  (is-even n))
 	(assert  (not (is-odd n)))
+	(assert  (string= fun "fun"))
+	(when *verbose* (format t "fun, is-odd, n = ~a, ~a, ~a~%" fun is-odd n))
 	(assert  (= x1 x2 x3 720))
 	(assert  (= y1 y2 y3 0))
 	(assert  (= avg 360))
@@ -187,6 +192,9 @@
 					   (t (cons x (take (- n 1) xs)))))))
 		smaller-list = (take 5 sorted-list)
 		
+		(:all p q r) = (take 5 (random-list 10 100))
+		(all p q r) = (format t "A function named all, given args p = ~a, q = ~a, r = ~a...~%" p q r)
+		
 		closure = (letfun count  = 0
 				  (incr) = ((incf count)
 					    (when *verbose* 
@@ -216,6 +224,9 @@
 		(assert (= (funcall closure) 3))
 		(assert (= (nth 6 newlist) 176))
 		(assert (= 120 (fact n)))
+		(assert (and (equal p q) (equal q r)))
+		(when *verbose* (format t "p = ~a~%q = ~a~%" p q))
+		(when *verbose* (all 1 2 3))
 		
 		(loop for i from 1 below (length sorted-list) do
 		     (assert (>= (elt sorted-list i)

@@ -318,6 +318,9 @@ have access to the second:
 It is however ok to have one or more function definitions in between, as these will be collected
 into a single labels form.
 
+Letfun (and letmacro) do not accept any of the keywords that let+/with accept, with the exception
+of :all to bind several variables to the same value.
+
 LETFUN- only accepts complex bindings and expands into a single flet form. It differs from letfun
 in that it binds its local functions in parallel.
 
