@@ -195,7 +195,10 @@ equivalent:
     (eb:letfun (2+ x) = (+ x 2) x = 3 (2+ x))
     
 Note that the left-hand side of a function definition is similar in form to an application of the
-same function (modulo keyword) - as it should for the equals sign to imply "is the same as". 
+same function (modulo keyword) - as it should for the equals sign to imply "is the same as".
+
+Letval, letfun and letmacro accept the :all keyword to bind several variables to the same value,
+but do not recognize any of the other keywords that can be used in let+ and with forms.
 
 WITH is similar to let+, and is thus similar to the `with' keyword in the loop facility, except for
 the additional functionality described above and that it binds in series rather than in 
@@ -304,7 +307,7 @@ Any lambda list that can be used with labels can be used:
     (letfun (add &rest args) = (apply #'+ args)
 	     x = 7 y = 9
 	     (add x y))
-	     
+
 Note that mutually recursive functions must not have any variable bindings in between their 
 definitions, as this will cause two extra scopes to be nested, so that the first function will not
 have access to the second:
@@ -317,9 +320,6 @@ have access to the second:
 
 It is however ok to have one or more function definitions in between, as these will be collected
 into a single labels form.
-
-Letfun (and letmacro) do not accept any of the keywords that let+/with accept, with the exception
-of :all to bind several variables to the same value.
 
 LETFUN- only accepts complex bindings and expands into a single flet form. It differs from letfun
 in that it binds its local functions in parallel.
