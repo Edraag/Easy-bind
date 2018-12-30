@@ -96,6 +96,23 @@ as a, c, ... satisfies predicate."
 (defun generate-let-binding-list (bindings)
   (collect-binding-list bindings #'simple-left-hand-side-p))
 
+(defun generate-symbol-macrolet-bindings (bindings)
+  (loop for (left right) in bindings
+     with collected = ()
+     do 
+       (progn (when (symbolp left)
+		(push (list left right) collected))
+	      (when (consp left)
+		(if (null (rest left))
+		    (push (list (first left) right) collected)
+		    (if (and (consp right)
+			     (= (length left) (length right)))
+			(loop for i in left
+			   for j in right
+			   do (push (list i j) collected))
+			(error "Malformed right-hand side in symbol-macro binding")))))
+     finally (return (nreverse collected))))
+
 (defun function-bindings-splice-implicit-progn (bindings)
   (loop for elt in bindings collect
        (single-splice-implicit-progn elt)))
@@ -220,38 +237,22 @@ forms like labels and macrolet. Collects bindings only as long as they satisfy p
 	     (values form-name function-bindings (length function-bindings)))))
     (generate-let*s-and-complex-bindings bindings body #'collector)))
 
+;; ----------- Form-generator functions used by binding macros -----------
+
+(defun generate-let+-expansion (bindings body)
+  (generate-let*s-and-complex-bindings bindings body 
+				       #'collect-let+-complex-bindings))
+
 (defun generate-let*s-and-labels (bindings body)
   (generate-let*s-and-function-bindings bindings body 'labels))
 
 (defun generate-let*s-and-macrolets (bindings body)
   (generate-let*s-and-function-bindings bindings body 'macrolet))
 
-(defun generate-let+-expansion (bindings body)
-  (generate-let*s-and-complex-bindings bindings body 
-				       #'collect-let+-complex-bindings))
-
 (defun generate-let*s-and-multiple-value-binds (bindings body)
-  "Used by multi-let to generate LET* and MULTIPLE-VALUE-BIND forms."
   (generate-let*s-and-complex-bindings bindings body
 				       (lambda (bindings)
 					 (values 'multiple-value-bind (car bindings) 1))))
-
-(defun generate-symbol-macrolet-bindings (bindings)
-  (loop for (left right) in bindings
-     with collected = ()
-     do 
-       (progn (when (symbolp left)
-		(push (list left right) collected))
-	      (when (consp left)
-		(if (null (rest left))
-		    (push (list (first left) right) collected)
-		    (if (and (consp right)
-			     (= (length left) (length right)))
-			(loop for i in left
-			   for j in right
-			   do (push (list i j) collected))
-			(error "Malformed right-hand side in symbol-macro binding")))))
-     finally (return (nreverse collected))))
 
 ;; ----------- Binding macros -----------
 
