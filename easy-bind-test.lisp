@@ -193,7 +193,7 @@
 		smaller-list = (take 5 sorted-list)
 		
 		(:all p q r) = (take 5 (random-list 10 100))
-		(all p q r) = (format t "A function named all, given args p = ~a, q = ~a, r = ~a...~%" p q r)
+		(all p q r) = (format t "A function named all, given args ~a ~a ~a.~%" p q r)
 		
 		closure = (letfun count  = 0
 				  (incr) = ((incf count)

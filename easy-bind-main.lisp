@@ -212,21 +212,19 @@ forms like labels and macrolet. Collects bindings only as long as they satisfy p
       (t
        (values 'destructuring-bind (car bindings) 1)))))
 
-(defun generate-let*s-and-labels (bindings body)
+(defun generate-let*s-and-function-bindings (bindings body form-name)
   (flet ((collector (bindings)
-	   (let ((labels-bindings 
+	   (let ((function-bindings 
 		  (generate-function-binding-list bindings)))
-	     (setf labels-bindings (function-bindings-splice-implicit-progn labels-bindings))
-	     (values 'labels labels-bindings (length labels-bindings)))))
+	     (setf function-bindings (function-bindings-splice-implicit-progn function-bindings))
+	     (values form-name function-bindings (length function-bindings)))))
     (generate-let*s-and-complex-bindings bindings body #'collector)))
 
+(defun generate-let*s-and-labels (bindings body)
+  (generate-let*s-and-function-bindings bindings body 'labels))
+
 (defun generate-let*s-and-macrolets (bindings body)
-  (flet ((collector (bindings)
-	   (let ((macrolet-bindings 
-		  (generate-function-binding-list bindings)))
-	     (setf macrolet-bindings (function-bindings-splice-implicit-progn macrolet-bindings))
-	     (values 'macrolet macrolet-bindings (length macrolet-bindings)))))
-    (generate-let*s-and-complex-bindings bindings body #'collector)))
+  (generate-let*s-and-function-bindings bindings body 'macrolet))
 
 (defun generate-let+-expansion (bindings body)
   (generate-let*s-and-complex-bindings bindings body 
