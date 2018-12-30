@@ -44,7 +44,7 @@
 	(letmatch list 
 	  ()                   => ()
 	  (x)                  => x
-	  (operator arg)       => (list operator arg)
+	  (arg1 operator)      => (list operator arg1)
 	  (arg1 operator arg2) => (list operator arg1 arg2)
 	  (arg1 . rest) =>
 	  (with operator being (first rest)

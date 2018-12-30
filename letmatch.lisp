@@ -24,6 +24,9 @@
     (t nil)))
 
 (defun map-leaves (tree predicate replacement-fn)
+  "Finds the leaves of the tree and conses up a new tree where
+the leaves are replaced according to replacement-fn, but only 
+if they satisfy predicate."
   (cond ((null tree) nil)
 	((consp tree) 
 	 (cons (map-leaves (car tree) predicate replacement-fn)
@@ -31,6 +34,16 @@
 	(t (if (funcall predicate tree)
 	       (funcall replacement-fn tree)
 	       tree))))
+
+(defun nmap-leaves (tree predicate action)
+  "Non-consing version of map-leaves."
+  (cond ((null tree) nil)
+	((consp tree) 
+	 (map-leaves (car tree) predicate action)
+	 (map-leaves (cdr tree) predicate action))
+	(t (if (funcall predicate tree)
+	       (funcall action tree)
+	       nil))))
 
 (defun consequent-sign-p (x)
   (and (symbolp x)
@@ -77,7 +90,7 @@ right-hand form becoming the body of the let+ form."
 				  ignorables = ()
 				  (setf car (map-leaves car #'ignorablep
 							   (lambda (x) (gensym (symbol-name x)))))
-				  (map-leaves car #'ignorablep (lambda (x) (push x ignorables)))
+				  (nmap-leaves car #'ignorablep (lambda (x) (push x ignorables)))
 				  (if (eq car t)
 				      `(t ,@cdr)
 				      `((matches ',car ,key-expr)
