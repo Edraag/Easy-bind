@@ -14,6 +14,8 @@
 (in-package :edraag.easy-bind)
 
 (defun matches (x y)
+  "Implements the rules for matching a left-hand side (x) to
+a given key-expression (y) in a letmatch form."
   (cond
     ((and (null x) (null y)) t)
     ((null x) nil)
@@ -36,7 +38,8 @@ if they satisfy predicate."
 	       tree))))
 
 (defun nmap-leaves (tree predicate action)
-  "Non-consing version of map-leaves."
+  "Non-consing version of map-leaves. Returns nil, or the
+result of applying action if tree is an atom."
   (cond ((null tree) nil)
 	((consp tree) 
 	 (map-leaves (car tree) predicate action)

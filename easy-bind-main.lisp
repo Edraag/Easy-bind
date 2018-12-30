@@ -150,13 +150,14 @@ as a, c, ... satisfies predicate."
 
 (defun generate-let*s-and-complex-bindings (bindings body 
 					    complex-binding-collector)
-  "Generates a LET* form as long as it can collect simple bindings, and
-complex bindings into a form or forms determined by complex-binding-collector, 
-alternately until binding list exhausted, at which point body is spliced 
-into the innermost form. Complex-binding-collector must be a function which 
-takes the binding list as argument and returns 3 values: 1) a form-name, 
-2) a list of bindings to give to the form, 3) the number of bindings it lays 
-claim to."
+  "Generates a LET* form as long as it can collect simple bindings, and complex 
+bindings into a form or forms determined by complex-binding-collector, alternately 
+nested until binding list exhausted, at which point body is spliced into the 
+innermost form. Recognizes the :all keyword and handles bindings accordingly.
+Complex-binding-collector must be a function which takes the binding list as 
+argument and returns 3 values: 1) a form-name, 2) a list of bindings to give to 
+the form, 3) the number of bindings it lays claim to from the passed-in binding
+list."
   (labels ((recur (bindings body) 
 	     (cond ((null bindings)
 		    body)
@@ -201,6 +202,10 @@ forms like labels and macrolet. Collects bindings only as long as they satisfy p
 	 (make-function-binding elt))))
 
 (defun collect-let+-complex-bindings (bindings)
+  "Complex-binding-collector to be passed to generate-let*s-and-complex-bindings when
+generating a let+-style binding form. As such it returns 3 values: a form-name (symbol),
+a binding list, and the number of binding pairs from the passed-in binding list it lays
+claim to."
   (let ((first-symbol (caaar bindings)))
     (cond
       ((function-keyword-p first-symbol)
@@ -230,6 +235,9 @@ forms like labels and macrolet. Collects bindings only as long as they satisfy p
        (values 'destructuring-bind (car bindings) 1)))))
 
 (defun generate-let*s-and-function-bindings (bindings body form-name)
+  "Used to create a form-generator for generating nested let* and <form-name>
+forms. Form-name must be a symbol which names a CL form that expects function-like
+bindings, such as labels or macrolet."
   (flet ((collector (bindings)
 	   (let ((function-bindings 
 		  (generate-function-binding-list bindings)))
