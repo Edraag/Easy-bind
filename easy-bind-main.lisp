@@ -38,9 +38,10 @@
   (consp x))
 
 (defun parse-separated-list (forms left-hand-side-predicate separator-predicate)
-  "Parses the forms only as long as pairs of forms are joined according to separator-predicate, 
-like so: (a1 <separator> a2 b1 <separator> b2 ...), and a1, b1... satisfies left-hand-side-predicate.
-Returns 2 values: 1) a list ((a1 a2) (b1 b2) ...), 2) the number of forms processed, including separators."
+  "Parses the forms only as long as pairs of forms are joined according to 
+separator-predicate, like so: (a1 <separator> a2 b1 <separator> b2 ...), and a1, b1... 
+satisfies left-hand-side-predicate. Returns 2 values: 1) a list ((a1 a2) (b1 b2) ...), 
+2) the number of forms processed, including separators."
   (loop 
      with count       = 0
      and value-coming = nil
@@ -73,8 +74,8 @@ Returns 2 values: 1) a list ((a1 a2) (b1 b2) ...), 2) the number of forms proces
   (list (caar binding) (cdar binding) (cadr binding)))
 
 (defun collect-binding-list (bindings left-hand-side-predicate)
-  "Takes a list ((a b) (c d) ...) and collects elems (x y) into new list only as long
-as a, c, ... satisfies predicate."
+  "Takes a list ((a b) (c d) ...) and collects elems (x y) into new list 
+only as long as a, c, ... satisfies predicate."
   (let ((binding-list nil))
     (labels ((recur (bindings)
 	       (cond
@@ -88,9 +89,11 @@ as a, c, ... satisfies predicate."
 
 (defun generate-function-binding-list (bindings)
   (let ((function-bindings 
-	 (collect-binding-list bindings (lambda (x) (and (complex-left-hand-side-p x)
-							 (symbolp (car x))
-							 (not (all-keyword-p (car x))))))))
+	 (collect-binding-list bindings 
+			       (lambda (x) 
+				 (and (complex-left-hand-side-p x)
+				      (symbolp (car x))
+				      (not (all-keyword-p (car x))))))))
     (loop for elt in function-bindings collect (make-function-binding elt))))
 
 (defun generate-let-binding-list (bindings)
@@ -274,10 +277,10 @@ bindings, such as labels or macrolet."
       (parse-separated-list forms 
 			    ,left-hand-pred
 			    ,separator-pred)
-    (let ((body (nthcdr count forms)))
-      (if (null bindings)
-	  `(progn ,@body)
-	  (funcall ,form-generator bindings body))))))
+       (let ((body (nthcdr count forms)))
+	 (if (null bindings)
+	     `(progn ,@body)
+	     (funcall ,form-generator bindings body))))))
 
 (define-binding-form let+ 
     :left-hand-pred #'simple-or-complex-left-hand-side-p 
