@@ -548,6 +548,21 @@ thus generate the binding list ((x 9) (y 8)) and the body
       (FORMAT T "x = ~a, y = ~a~%" X Y)
       (+ X Y))
 
+The non-exported function eb::generate-let*s-and-complex-bindings can be used to make a 
+form-generator that will collect simple bindings into a let* form or forms, and complex bindings
+into a form or forms which will be determined by a function passed as argument. Its signature is
+generate-let*s-and-complex-bindings (bindings body complex-binding-collector), where bindings and
+body must be passed on from the form-generator. Complex-binding-collector must be a function which 
+takes the binding list as argument and returns 3 values: 1) a form-name, 2) a list of bindings to
+give to the form, 3) the number of bindings it lays claim to from the passed-in binding list. 
+Generate-let*s-and-complex-bindings recognizes the :all keyword, so the passed-in function will
+only be called to handle complex bindings that do not have the :all keyword in the car position.
+
+Let+ and with are defined with the form-generator eb::generate-let+-expansion, which passes the
+function eb::collect-let+-complex-bindings to eb::generate-let*s-and-complex-bindings. 
+Collect-let+-complex-bindings recognizes the keywords :fun, :macro:, :val and :sym, and will
+"order" a destructuring-bind form to be created if none of these is present.
+
 --- Emacs ---
 
 To have the Easy-bind binding forms syntax-highlighted as "keywords" in Emacs, add the
