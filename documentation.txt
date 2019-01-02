@@ -549,14 +549,23 @@ thus generate the binding list ((x 9) (y 8)) and the body
       (+ X Y))
 
 The non-exported function eb::generate-let*s-and-complex-bindings can be used to make a 
-form-generator that will collect simple bindings into a let* form or forms, and complex bindings
-into a form or forms which will be determined by a function passed as argument. Its signature is
-generate-let*s-and-complex-bindings (bindings body complex-binding-collector), where bindings and
-body must be passed on from the form-generator. Complex-binding-collector must be a function which 
-takes the binding list as argument and returns 3 values: 1) a form-name, 2) a list of bindings to
-give to the form, 3) the number of bindings it lays claim to from the passed-in binding list. 
-Generate-let*s-and-complex-bindings recognizes the :all keyword, so the passed-in function will
-only be called to handle complex bindings that do not have the :all keyword in the car position.
+form-generator that will alternately collect simple bindings into a let* form or forms, and complex
+bindings into a form or forms which will be determined by a function passed as argument. Its
+signature is: 
+
+    generate-let*s-and-complex-bindings (bindings body complex-binding-collector), 
+    
+where bindings and body must be passed on from the form-generator. Complex-binding-collector must
+be a function which takes the binding list as argument and returns 3 values: 1) a form-name (a 
+symbol), 2) a list of bindings to give to the form, 3) the number of successive bindings it lays
+claim to from the passed-in binding list. Generate-let*s-and-complex-bindings recognizes the :all 
+keyword, so the passed-in function will only be called to handle complex bindings that do not have 
+the :all keyword in the car position. 
+
+Generate-let*s-and-complex-bindings makes two assumptions about the binding form(s) that it will 
+create based on the passed-in form-name symbol: 1) that if the symbol-name includes the character 
+sequence "bind", it will have the syntax of multiple-value-bind and destructuring-bind, and 2) that
+it otherwise will have the syntax of let, flet, labels etc.
 
 Let+ and with are defined with the form-generator eb::generate-let+-expansion, which passes the
 function eb::collect-let+-complex-bindings to eb::generate-let*s-and-complex-bindings. 

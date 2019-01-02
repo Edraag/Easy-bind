@@ -121,6 +121,8 @@ only as long as a, c, ... satisfies predicate."
        (single-splice-implicit-progn elt)))
 
 (defun single-splice-implicit-progn (function-binding)
+  "Removes the outer list surrounding the `implicit progn' of a
+function-binding right-hand side (body)."
   (destructuring-bind (x y . z) function-binding
 	 (if (and (consp (car z))
 		  (consp (caar z))
@@ -158,9 +160,9 @@ bindings into a form or forms determined by complex-binding-collector, alternate
 nested until binding list exhausted, at which point body is spliced into the 
 innermost form. Recognizes the :all keyword and handles bindings accordingly.
 Complex-binding-collector must be a function which takes the binding list as 
-argument and returns 3 values: 1) a form-name, 2) a list of bindings to give to 
-the form, 3) the number of bindings it lays claim to from the passed-in binding
-list."
+argument and returns 3 values: 1) a form-name (a symbol), 2) a list of bindings to 
+give to the form, 3) the number of successive bindings it lays claim to from the 
+passed-in binding list."
   (labels ((recur (bindings body) 
 	     (cond ((null bindings)
 		    body)
