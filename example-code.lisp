@@ -74,6 +74,7 @@
 
 ;; ------- Simple quicksort implementation -------
 
+;; With local function
 (defun qsort (list)
   (when list
     (with (p . xs) = list
@@ -82,3 +83,11 @@
 		 (list p)
 		 (qsort (remove-if-not #'filter xs))))))
 
+;; With symbol-macro
+(defun qsort (list)
+  (when list
+    (with (p . xs) = list
+	  (:sym filter) = (lambda (x) (> x p))
+	  (nconc (qsort (remove-if filter xs))
+		 (list p)
+		 (qsort (remove-if-not filter xs))))))
