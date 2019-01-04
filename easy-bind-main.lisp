@@ -300,7 +300,7 @@ bindings, such as labels or macrolet."
     :form-generator #'generate-let*s-and-multiple-value-binds)
 
 (define-binding-form let-
-    :left-hand-pred  #'simple-left-hand-side-p 
+    :left-hand-pred #'simple-left-hand-side-p 
     :separator-pred #'equals-sign-p
     :form-generator (lambda (bindings body) `(let ,bindings ,@body)))
 

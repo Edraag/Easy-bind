@@ -28,7 +28,8 @@
 	f = (cons k l)
 	(h . j) = f
 	(:val v1 v2) = (values 1000 2000)
-	(:fun square x) = ((when *verbose* (format t "First squaring function...~%"))
+	(:fun square x) = ((when *verbose* 
+			     (format t "First squaring function...~%"))
 			   (* x x))
 	x = 60
 	y = 70
@@ -51,7 +52,8 @@
 		k = (fact n)
 		(format t "~&compile-time: k = ~a ~%" k)
 		k)
-	m = (compile-time-fact 5) ; Only works with literal number! Computed at compile-time.
+	m = (compile-time-fact 5) ; Only works with literal number,
+				  ; computed at compile-time.
 	
 	(:fun is-even n) = (if (zerop n) t
 			       (is-odd (- n 1)))
@@ -89,11 +91,13 @@
 	(assert  (= x1 x2 x3 720))
 	(assert  (= y1 y2 y3 0))
 	(assert  (= avg 360))
-	(when *verbose* message)
-	(when *verbose* (format t "Let+ seems "))
-	(when *verbose* (format t "to be "))
-	(when *verbose* (format t "working~%"))
-	(when *verbose* (format t "Should be the same: (5 . 6) and ~a and ~a~%" f (cons h j)))
+	(when *verbose* 
+	  message
+	  (format t "Let+ seems ")
+	  (format t "to be ")
+	  (format t "working~%")
+	  (format t "Should be the same: (5 . 6) and ~a and ~a~%" 
+		  f (cons h j)))
 	
 	(let- u = v
 	      v = u
@@ -114,15 +118,17 @@
 		;; Body of multi-let starts here
 		(assert (= 300 (+ m n b c)))
 		(assert (= c2 15))
-		(when *verbose* (format t "Should be the same: ~f ~f~%" e (exp 1)))
-		(when *verbose* (format t "Letval seems "))
-		(when *verbose* (format t "to be "))
-		(when *verbose* (format t "working.~%")))
+		(when *verbose* 
+		  (format t "Should be the same: ~f ~f~%" e (exp 1))
+		  (format t "Letval seems ")
+		  (format t "to be ")
+		  (format t "working.~%")))
 	
 	(letfun n = 13
 		(square x) = (with square being (* x x)
-				   (when *verbose* (format t "Squaring ~a, " x))
-				   (when *verbose* (format t "result = ~a ~%" square))
+				   (when *verbose*
+				     (format t "Squaring ~a, " x)
+				     (format t "result = ~a ~%" square))
 				   square)
 		m = (square n)
 		n = v
@@ -141,10 +147,12 @@
 		(qsort list) = (letmatch list
 				 () => ()
 				 (p . xs) =>
-				 (nconc (qsort (remove-if (lambda (x) (> x p)) xs))
+				 (nconc (qsort (remove-if 
+						(lambda (x) (> x p)) xs))
 					(list p)
-					(qsort (remove-if-not (lambda (x) (> x p)) xs))))
-	      
+					(qsort (remove-if-not 
+						(lambda (x) (> x p)) xs))))
+		
 		sorted-list = (qsort random-list)
 		(count-list list) = (letmatch list
 				      () => 0
@@ -166,7 +174,8 @@
 				    (x) => (list x)
 				    (x y . ys) => (if (equal x y)
 						      (remove-dups (cons y ys))
-						      (cons x (remove-dups (cons y ys)))))
+						      (cons x (remove-dups 
+							       (cons y ys)))))
 		no-duplicate-sorted-list = (remove-dups sorted-list)
 		
 		(qsort list) = (when list
@@ -193,23 +202,25 @@
 		smaller-list = (take 5 sorted-list)
 		
 		(:all p q r) = (take 5 (random-list 10 100))
-		(all p q r) = (format t "A function named all, given args ~a ~a ~a.~%" p q r)
+		(all p q r) = 
+		(format t "A function named all, given args ~a ~a ~a.~%" p q r)
 		
-		closure = (letfun count  = 0
-				  (incr) = ((incf count)
-					    (when *verbose* 
-					      (format t "Closure: The count is now: ~a ~%" count))
-					    count)
-				  #'incr)
+		closure = (letfun 
+			   count = 0
+			   (incr) = ((incf count)
+				     (when *verbose* 
+				       (format t "Closure: The count is now: ~a ~%" count))
+				     count)
+			   #'incr)
 		
 		;; Body of letfun starts here
 		(letfun- (f x) = (* x 100)
 			 (g x) = (f x)
 			 (square x) = (with square being (* x x)
-					    (when *verbose* (format t "Another square function... ~%" ))
-					    (when *verbose* (format t "Squaring away... ~%" ))
-					    (when *verbose* (format t "(square ~a) = ~a ~%" x square))
-					    square)
+					    (when *verbose*
+					      (format t "Another square function... ~%" )
+					      (format t "(square ~a) = ~a ~%" x square))
+					      square)
 			 (assert (= 300 (f 3)))
 			 (assert (= 170 (g 1)))
 			 (assert (= 25 (square n)))
@@ -240,26 +251,29 @@
 		     (assert (not (= (elt no-duplicate-sorted-list i)
 				     (elt no-duplicate-sorted-list (- i 1))))))
 		
-		(when *verbose* (format t "sorted-list = ~a ~%" sorted-list))
-		(when *verbose* (format t "no-duplicate-sorted-list = ~a ~%" no-duplicate-sorted-list))
-		(when *verbose* (format t "smaller-list = ~a ~%" smaller-list))
-		(when *verbose* (format t "last-elt = ~a ~%" last-elt))
-		(when *verbose* (format t "sum-list = ~a ~%" sum-list))
-		(when *verbose* (format t "second-sorted-list = ~a ~%" second-sorted-list))
+		(when *verbose* 
+		  (format t "sorted-list = ~a ~%" sorted-list)
+		  (format t "no-duplicate-sorted-list = ~a ~%" no-duplicate-sorted-list)
+		  (format t "smaller-list = ~a ~%" smaller-list)
+		  (format t "last-elt = ~a ~%" last-elt)
+		  (format t "sum-list = ~a ~%" sum-list)
+		  (format t "second-sorted-list = ~a ~%" second-sorted-list))
 		(assert (= length (length sorted-list)))
 		(assert (= last-elt (nth (1- length) sorted-list)))
 		(assert (= sum-list (reduce '+ sorted-list)))
 		
-		(letfun (square x) = ((when *verbose* (format t "Inner square now...~%")
-					    (format t "Not actually squaring ~d...~%" x))
-				      x)
+		(letfun (square x) = 
+			((when *verbose* (format t "Inner square now...~%")
+			       (format t "Not actually squaring ~d...~%" x))
+			 x)
 			(assert (= (square 2) 2))
 			(assert (= x 60)))
 		(assert (= (square 2) 4))
 		(assert (= x 60))
-		(when *verbose* (format t "Letfun seems "))
-		(when *verbose* (format t "to be "))
-		(when *verbose* (format t "working.~%")))
+		(when *verbose* 
+		  (format t "Letfun seems ")
+		  (format t "to be ")
+		  (format t "working.~%")))
 	
 	(letmacro s = z
 		  (macro-square x) =
@@ -286,9 +300,10 @@
 		  ;; Body of letmacro starts here
 		  (assert (= 50 z))
 		  (assert (= 7225 y))
-		  (when *verbose* (format t "Letmacro seems "))
-		  (when *verbose* (format t "to be "))
-		  (when *verbose* (format t "working.~%")))
+		  (when *verbose* 
+		    (format t "Letmacro seems ")
+		    (format t "to be ")
+		    (format t "working.~%")))
 	
 	(letsym   x = (when *verbose* (format t "x expanded.~%"))
 		  y = (when *verbose* (format t "y expanded.~%"))
@@ -300,9 +315,10 @@
 		  x y z
 		  (assert (= 17 sum))
 		  (assert (= 17/2 avg))
-		  (when *verbose* (format t "Letsym seems "))
-		  (when *verbose* (format t "to be "))
-		  (when *verbose* (format t "working if x, y, z expanded.~%" )))
+		  (when *verbose* 
+		    (format t "Letsym seems ")
+		    (format t "to be ")
+		    (format t "working if x, y, z expanded.~%" )))
 	
 	(with     alist = '((:a 1) (:b 2) (:c 3))
 		  tree  = '(+ (* 3 (+ 4 (/ 13 2)) 5) 14 (/ (- 23 (* 2 (+ 1 2))) 3))
