@@ -100,10 +100,10 @@
    (iter old new) = (if (close-enuf old new)
 			new
 			(iter new (funcall f new)))
-   (close-enuf u v) = (< (abs ( - u v)) tolerance)
+   (close-enuf u v) = (< (abs (- u v)) tolerance)
    (iter start (funcall f start))))
 
 (defun square-root (x)
   (with
    (:fun f y) = (/ (+ y (/ x y)) 2)
-   (fp #'f 1.0)))
+   (fixed-point #'f 1.0)))
