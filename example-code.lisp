@@ -74,7 +74,7 @@
 
 ;; ------- Simple quicksort implementation -------
 
-;; With local function
+;; With local function (closes over p)
 (defun qsort (list)
   (when list
     (with (p . xs) = list
@@ -83,7 +83,7 @@
 		 (list p)
 		 (qsort (remove-if-not #'filter xs))))))
 
-;; With symbol-macro
+;; With symbol-macro - use with caution
 (defun qsort (list)
   (when list
     (with (p . xs) = list
@@ -91,3 +91,19 @@
 	  (nconc (qsort (remove-if filter xs))
 		 (list p)
 		 (qsort (remove-if-not filter xs))))))
+
+;; ------- Square root algorithm from SICP -------
+
+(defun fixed-point (f start) 
+  (letfun
+   tolerance = 0.00001
+   (iter old new) = (if (close-enuf old new)
+			new
+			(iter new (funcall f new)))
+   (close-enuf u v) = (< (abs ( - u v)) tolerance)
+   (iter start (funcall f start))))
+
+(defun square-root (x)
+  (with
+   (:fun f y) = (/ (+ y (/ x y)) 2)
+   (fp #'f 1.0)))

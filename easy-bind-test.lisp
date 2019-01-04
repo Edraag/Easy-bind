@@ -115,7 +115,7 @@
 		c = u
 		(a3 a4 a5 a6 a7) = (values 1 2 3 (list 4) (list 5))
 		c2 = (apply '+ a3 a4 a5 (append a6 a7))
-		;; Body of multi-let starts here
+		;; Body of letval starts here
 		(assert (= 300 (+ m n b c)))
 		(assert (= c2 15))
 		(when *verbose* 
