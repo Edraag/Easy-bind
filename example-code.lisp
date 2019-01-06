@@ -83,19 +83,19 @@
 		 (list p)
 		 (qsort (remove-if-not #'filter xs))))))
 
-;; With symbol-macro - p a free variable in expanded lambda form
+;; With lambda stored in variable
 (defun qsort (list)
   (when list
     (with (p . xs) = list
-	  (:sym filter) = (lambda (x) (> x p))
+	  filter = (lambda (x) (> x p))
 	  (nconc (qsort (remove-if filter xs))
 		 (list p)
 		 (qsort (remove-if-not filter xs))))))
 
-;; ...thus the symbol-macro definition can also be lifted out of the 
-;; recursive function:
-(letsym 
- filter = (lambda (x) (> x p))
+;; With symbol-macro defined outside of the function 
+;; (free variable injection and capture of p)
+(with 
+ (:sym filter) = (lambda (x) (> x p))
  (defun qsort (list)
    (when list
      (with (p . xs) = list
