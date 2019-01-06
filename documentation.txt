@@ -563,10 +563,11 @@ keyword, so the passed-in function will only be called to handle complex binding
 the :all keyword in the car position. 
 
 Generate-let*s-and-complex-bindings makes two assumptions about the binding form(s) that it will 
-create based on the passed-in form-name symbol: 1) that if the symbol-name includes the character 
-sequence "bind", it will have the syntax of multiple-value-bind and destructuring-bind, and 2) that
-it otherwise will have the syntax of let, flet, labels etc, meaning that in the latter case the 
-binding pair or pairs (a b) will keep its surrounding list in the generated form.
+create based on the form-name symbol returned from its complex-binding-collector: 1) that if the 
+symbol-name includes the character sequence "bind", it will have the syntax of multiple-value-bind
+and destructuring-bind, and 2) that it otherwise will have the syntax of let, flet, labels etc, 
+meaning that in the latter case the binding pair or pairs (a b) will keep its surrounding list in
+the generated form.
 
 Let+ and with are defined with the form-generator eb::generate-let+-expansion, which passes the
 function eb::collect-let+-complex-bindings to eb::generate-let*s-and-complex-bindings. 
