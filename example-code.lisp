@@ -74,7 +74,7 @@
 
 ;; ------- Simple quicksort implementation -------
 
-;; With local function (closes over p)
+;; With local function - closes over p
 (defun qsort (list)
   (when list
     (with (p . xs) = list
@@ -83,7 +83,7 @@
 		 (list p)
 		 (qsort (remove-if-not #'filter xs))))))
 
-;; With symbol-macro - use with caution
+;; With symbol-macro - p a free variable in expanded lambda form
 (defun qsort (list)
   (when list
     (with (p . xs) = list
@@ -92,8 +92,23 @@
 		 (list p)
 		 (qsort (remove-if-not filter xs))))))
 
+;; ...thus the symbol-macro definition can also be lifted out of the 
+;; recursive function:
+(letsym 
+ filter = (lambda (x) (> x p))
+ (defun qsort (list)
+   (when list
+     (with (p . xs) = list
+	   (nconc (qsort (remove-if filter xs))
+		  (list p)
+		  (qsort (remove-if-not filter xs)))))))
+
 ;; ------- Square root algorithm from SICP -------
 
+;; Note: would not have worked if tolerance was defined
+;; between iter and close-enuf, because close-enuf would 
+;; then have been invisible to iter (they would belong
+;; to different labels forms in the expansion)
 (defun fixed-point (f start) 
   (letfun
    tolerance = 0.00001
@@ -104,6 +119,6 @@
    (iter start (funcall f start))))
 
 (defun square-root (x)
-  (with
-   (:fun f y) = (/ (+ y (/ x y)) 2)
-   (fixed-point #'f 1.0)))
+  (with (:fun f y) = (/ (+ y (/ x y)) 2)
+	(fixed-point #'f 1.0)))
+
