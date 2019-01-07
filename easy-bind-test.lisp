@@ -93,9 +93,7 @@
 	(assert  (= avg 360))
 	(when *verbose* 
 	  message
-	  (format t "Let+ seems ")
-	  (format t "to be ")
-	  (format t "working~%")
+	  (format t "Let+ seems to be working.~%")
 	  (format t "Should be the same: (5 . 6) and ~a and ~a~%" 
 		  f (cons h j)))
 	
@@ -118,11 +116,10 @@
 		;; Body of letval starts here
 		(assert (= 300 (+ m n b c)))
 		(assert (= c2 15))
-		(when *verbose* 
-		  (format t "Should be the same: ~f ~f~%" e (exp 1))
-		  (format t "Letval seems ")
-		  (format t "to be ")
-		  (format t "working.~%")))
+		(when *verbose* (format t "Should be the same: ~f ~f~%" e (exp 1)))
+		(when *verbose* (format t "Letval seems "))
+		(when *verbose* (format t "to be "))
+		(when *verbose* (format t "working.~%")))
 	
 	(letfun n = 13
 		(square x) = (with square being (* x x)
@@ -271,9 +268,7 @@
 		(assert (= (square 2) 4))
 		(assert (= x 60))
 		(when *verbose* 
-		  (format t "Letfun seems ")
-		  (format t "to be ")
-		  (format t "working.~%")))
+		  (format t "Letfun seems to be working.~%")))
 	
 	(letmacro s = z
 		  (macro-square x) =
@@ -300,10 +295,9 @@
 		  ;; Body of letmacro starts here
 		  (assert (= 50 z))
 		  (assert (= 7225 y))
-		  (when *verbose* 
-		    (format t "Letmacro seems ")
-		    (format t "to be ")
-		    (format t "working.~%")))
+		  (when *verbose* (format t "Letmacro seems "))
+		  (when *verbose* (format t "to be "))
+		  (when *verbose* (format t "working.~%")))
 	
 	(letsym   x = (when *verbose* (format t "x expanded.~%"))
 		  y = (when *verbose* (format t "y expanded.~%"))
@@ -315,10 +309,9 @@
 		  x y z
 		  (assert (= 17 sum))
 		  (assert (= 17/2 avg))
-		  (when *verbose* 
-		    (format t "Letsym seems ")
-		    (format t "to be ")
-		    (format t "working if x, y, z expanded.~%" )))
+		  (when *verbose* (format t "Letsym seems "))
+		  (when *verbose* (format t "to be "))
+		  (when *verbose* (format t "working if x, y, z expanded.~%" )))
 	
 	(with     alist = '((:a 1) (:b 2) (:c 3))
 		  tree  = '(+ (* 3 (+ 4 (/ 13 2)) 5) 14 (/ (- 23 (* 2 (+ 1 2))) 3))
@@ -373,9 +366,9 @@
 		    (assert (= x 1)))
 	      (assert (= x 42)))
 	(assert (= x 60))
-	(when *verbose* (format t "Binding constructs working OK.~%" ))
+	(when *verbose* (format t "Binding constructs working OK.~%"))
         t))
 
 (defun test-easy-bind-silent ()
-  (with *verbose* being nil
+  (with *verbose* being nil 
 	(test-easy-bind)))

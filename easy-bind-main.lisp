@@ -120,15 +120,18 @@ only as long as a, c, ... satisfies predicate."
   (loop for elt in bindings collect
        (single-splice-implicit-progn elt)))
 
+;; Expects a binding with the syntax of flet, labels etc,
+;; (fn lambda-list (body)) becomes
+;; (fn lambda-list body)"
 (defun single-splice-implicit-progn (function-binding)
   "Removes the outer list surrounding the `implicit progn' of a
 function-binding right-hand side (body)."
   (destructuring-bind (x y . z) function-binding
-	 (if (and (consp (car z))
-		  (consp (caar z))
-		  (not (eq (caaar z) 'lambda)))
-	     (list* x y (car z))
-	     function-binding)))
+    (if (and (consp (car z))
+	     (consp (caar z))
+	     (not (eq (caaar z) 'lambda)))
+	(list* x y (car z))
+	function-binding)))
 
 (defun function-keyword-p (x)
   (eq x :fun))
@@ -194,17 +197,17 @@ passed-in binding list."
 					 ,@(recur (nthcdr count bindings) body)))))))))
     (car (recur bindings body))))
 
-(defun let+-collect-function-bindings (bindings predicate)
+(defun let+-collect-function-bindings (bindings keyword-predicate)
   "Used to collect binding pairs where the first element is a list which begins with a
 keyword like :fun or :macro, and transforming these to bindings which can be used by
 forms like labels and macrolet. Collects bindings only as long as they satisfy predicate."
   (let ((function-bindings 
-	 (collect-binding-list bindings predicate)))
+	 (collect-binding-list bindings keyword-predicate)))
     ; Get rid of initial keyword
     (loop for elt in function-bindings do
 	 (setf (car elt) (cdar elt)))
     (loop for elt in function-bindings collect 
-	 (make-function-binding elt))))
+	 (single-splice-implicit-progn (make-function-binding elt)))))
 
 (defun collect-let+-complex-bindings (bindings)
   "Complex-binding-collector to be passed to generate-let*s-and-complex-bindings when
@@ -215,16 +218,12 @@ claim to."
     (cond
       ((function-keyword-p first-symbol)
        (let ((labels-bindings
-	       (let+-collect-function-bindings bindings #'function-binding-p)))
-	 (setf labels-bindings
-	       (function-bindings-splice-implicit-progn labels-bindings))
+	      (let+-collect-function-bindings bindings #'function-binding-p)))
 	 (values 'labels labels-bindings (length labels-bindings))))
       
       ((macro-keyword-p first-symbol)
        (let ((macrolet-bindings
 	      (let+-collect-function-bindings bindings #'macro-binding-p)))
-	 (setf macrolet-bindings
-	       (function-bindings-splice-implicit-progn macrolet-bindings))
 	 (values 'macrolet macrolet-bindings (length macrolet-bindings))))
       
       ((values-keyword-p first-symbol)
@@ -275,10 +274,10 @@ bindings, such as labels or macrolet."
 				      form-generator)
   `(defmacro ,name (&rest forms)
      (multiple-value-bind
-	(bindings count)
-      (parse-separated-list forms 
-			    ,left-hand-pred
-			    ,separator-pred)
+	   (bindings count)
+	 (parse-separated-list forms 
+			       ,left-hand-pred
+			       ,separator-pred)
        (let ((body (nthcdr count forms)))
 	 (if (null bindings)
 	     `(progn ,@body)
