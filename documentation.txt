@@ -568,8 +568,7 @@ symbol-name includes the character sequence "bind", it will have the syntax of m
 and destructuring-bind, and 2) that it otherwise will have the syntax of let, flet, labels etc. 
 In the first case the binding list for the form is expected to contain a single pair which will be 
 spliced into the form so that it does not have a surrounding list. In the second case the binding 
-list is expected to contain one or more two-element lists of binding pairs, like so: 
-((a1 b1) ... (an bn)), and will be copied into the generated form unaltered.
+list will be copied into the generated form unaltered.
 
 Let+ and with are defined with the form-generator eb::generate-let+-expansion, which passes the
 function eb::collect-let+-complex-bindings to eb::generate-let*s-and-complex-bindings. 
