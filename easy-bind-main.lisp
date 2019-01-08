@@ -55,7 +55,8 @@ satisfies left-hand-side-predicate. Returns 2 values: 1) a list ((a1 a2) (b1 b2)
 		    (funcall left-hand-side-predicate elt))
 	       (push elt collected)
 	       (incf count))
-	      ((funcall separator-predicate elt)
+	      ((and (multiple-of 3 (- count 1))
+		    (funcall separator-predicate elt))
 	       (setf value-coming t)
 	       (incf count))
 	      (t (loop-finish)))
@@ -309,11 +310,11 @@ bindings, such as labels or macrolet."
     :form-generator #'generate-let*s-and-labels)
 
 (define-binding-form letfun-
-    :left-hand-pred #'simple-or-complex-left-hand-side-p 
+    :left-hand-pred #'complex-left-hand-side-p 
     :separator-pred #'equals-sign-p
     :form-generator (lambda (bindings body) 
 		      `(flet ,(function-bindings-splice-implicit-progn
-			       (generate-function-binding-list bindings)) 
+			       (generate-function-binding-list bindings))
 			 ,@body)))
 
 (define-binding-form letmacro

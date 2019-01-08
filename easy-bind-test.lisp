@@ -374,6 +374,8 @@
 			  (assert (= y 42))
 			  (assert (= z 0)))))
 	(assert (= x 60))
+	(assert (equal (macroexpand '(letfun- = = 3))
+		       '(progn = = 3)))
 	(when *verbose* (format t "Binding constructs working OK.~%"))
         t))
 
