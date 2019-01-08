@@ -47,18 +47,17 @@ satisfies left-hand-side-predicate. Returns 2 values: 1) a list ((a1 a2) (b1 b2)
      and value-coming = nil
      and collected    = ()  ; becomes (... b2 b1 a2 a1)
      for elt in forms
-     do (cond ((and (multiple-of 3 count)
+     do (cond (value-coming
+	       (push elt collected)
+	       (setf value-coming nil)
+	       (incf count))
+	      ((and (multiple-of 3 count)
 		    (funcall left-hand-side-predicate elt))
 	       (push elt collected)
 	       (incf count))
-	      ((and (not value-coming)
-		    (funcall separator-predicate elt))
+	      ((funcall separator-predicate elt)
 	       (setf value-coming t)
 	       (incf count))
-	      (value-coming
-	       (push elt collected)
-	       (incf count)
-	       (setf value-coming nil))
 	      (t (loop-finish)))
      finally
        (when value-coming

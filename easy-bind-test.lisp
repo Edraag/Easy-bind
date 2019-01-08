@@ -364,7 +364,15 @@
 	      (assert (= x 42))
 	      (with x being 1
 		    (assert (= x 1)))
-	      (assert (= x 42)))
+	      (with being being x
+		    (assert (= being 42))
+		    (with y being being
+			  x = 0
+			  = = x
+			  z = =
+			  (when *verbose* (format t "y = ~a, z = ~a~%" y z))
+			  (assert (= y 42))
+			  (assert (= z 0)))))
 	(assert (= x 60))
 	(when *verbose* (format t "Binding constructs working OK.~%"))
         t))
