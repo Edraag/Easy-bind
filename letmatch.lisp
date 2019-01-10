@@ -26,9 +26,9 @@ a given key-expression (y) in a letmatch form."
     (t nil)))
 
 (defun map-leaves (tree predicate replacement-fn)
-  "Finds the leaves of the tree and conses up a new tree where
-the leaves are replaced according to replacement-fn, but only 
-if they satisfy predicate."
+  "Finds the leaves of the tree and conses up a similar tree 
+where the leaves are replaced according to replacement-fn, but
+only if they satisfy predicate."
   (cond ((null tree) nil)
 	((consp tree) 
 	 (cons (map-leaves (car tree) predicate replacement-fn)
@@ -39,7 +39,8 @@ if they satisfy predicate."
 
 (defun nmap-leaves (tree predicate action)
   "Non-consing version of map-leaves. Returns nil, or the
-result of applying action if tree is an atom."
+result of applying action if tree is an atom and satisfies
+predicate."
   (cond ((null tree) nil)
 	((consp tree) 
 	 (map-leaves (car tree) predicate action)
@@ -57,6 +58,8 @@ result of applying action if tree is an atom."
        (char= (elt (symbol-name x) 0) #\_)))
 
 (defun splice-implicit-progn (forms)
+  "Remove outer list around right-hand sides of
+arguments to letmatch."
   (loop for form in forms collect
        (with (x . z) = form
 	 (if (and (consp (car z))
@@ -73,9 +76,6 @@ result of applying action if tree is an atom."
 			 (not (consequent-sign-p elt)))
 		(error "Malformed letmatch expression - missing or misplaced => sign")))))
 
-(defun structure-p (x)
-  (or (atom x) (listp x)))
-
 (defmacro letmatch (key-expr &body body)
   "Conditional form of let+ which expands into a cond form where the test-forms are calls to
 `matches' to check if the structure of each binding-list in the body matches that of key-expr.
@@ -84,7 +84,7 @@ The first binding-list that matches is bound to key-expr in a let+ form (at runt
 right-hand form becoming the body of the let+ form."
   (letmatch-body-check-wellformedness body)
   (let+ cond-clauses = (parse-separated-list body 
-					     #'structure-p
+					     #'simple-or-complex-left-hand-side-p
 					     #'consequent-sign-p)
 	(setf cond-clauses (splice-implicit-progn cond-clauses))
 	`(cond ,@(loop for clause in cond-clauses

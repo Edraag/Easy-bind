@@ -374,8 +374,18 @@
 			  (assert (= y 42))
 			  (assert (= z 0)))))
 	(assert (= x 60))
+	; Letfun- does not accept symbols as left-hand sides
 	(assert (equal (macroexpand '(letfun- = = 3))
 		       '(progn = = 3)))
+	; No right-hand side means no binding, "tokens" belong to body
+	(assert	(equal (macroexpand '(let+ x =))
+		       '(progn x =)))
+	(assert	(equal (macroexpand '(let+ x = 3))
+		       '(let* ((x 3)))))
+	(assert	(equal (macroexpand '(let+ x = 3 y =))
+		       '(let* ((x 3)) y =)))
+	(assert	(equal (macroexpand '(let+ x = 3 y = 4))
+		       '(let* ((x 3) (y 4)))))
 	(when *verbose* (format t "Binding constructs working OK.~%"))
         t))
 

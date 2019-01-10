@@ -61,11 +61,11 @@ satisfies left-hand-side-predicate. Returns 2 values: 1) a list ((a1 a2) (b1 b2)
 	       (incf count))
 	      (t (loop-finish)))
      finally
-       (when value-coming
-	 (error "Separator not followed by expression"))
        (when (oddp (length collected))
 	 (setf collected (rest collected))
-	 (decf count))
+	 (if value-coming
+	     (decf count 2)
+	     (decf count)))
        (return (values 
 		(loop for (a1 a2) on (nreverse collected) by #'cddr collecting (list a1 a2))
 		count))))
