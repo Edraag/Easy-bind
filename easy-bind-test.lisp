@@ -198,6 +198,16 @@
 					   (t (cons x (take (- n 1) xs)))))))
 		smaller-list = (take 5 sorted-list)
 		
+		(maxi list) = (letmatch list
+				() => (error "No elements")
+				(x) => x
+				(x . xs) =>
+				(with maxtail being (maxi xs)
+				      (if (> x maxtail)
+					  x
+					  maxtail)))
+		maxlist = (maxi random-list)
+		
 		(:all p q r) = (take 5 (random-list 10 100))
 		(all p q r) = 
 		(format t "A function named all, given args ~a ~a ~a.~%" p q r)
@@ -250,6 +260,7 @@
 		
 		(when *verbose* 
 		  (format t "sorted-list = ~a ~%" sorted-list)
+		  (format t "maxlist = ~a~%" maxlist)
 		  (format t "no-duplicate-sorted-list = ~a ~%" no-duplicate-sorted-list)
 		  (format t "smaller-list = ~a ~%" smaller-list)
 		  (format t "last-elt = ~a ~%" last-elt)
@@ -258,6 +269,7 @@
 		(assert (= length (length sorted-list)))
 		(assert (= last-elt (nth (1- length) sorted-list)))
 		(assert (= sum-list (reduce '+ sorted-list)))
+		(assert (= maxlist last-elt))
 		
 		(letfun (square x) = 
 			((when *verbose* (format t "Inner square now...~%"))
@@ -313,51 +325,51 @@
 		  (when *verbose* (format t "to be "))
 		  (when *verbose* (format t "working if x, y, z expanded.~%" )))
 	
-	(with     alist = '((:a 1) (:b 2) (:c 3))
-		  tree  = '(+ (* 3 (+ 4 (/ 13 2)) 5) 14 (/ (- 23 (* 2 (+ 1 2))) 3))
-		  match =  (letmatch alist
-			     () => (error "~a not supposed to be empty!" alist)
-			     x  => ((when *verbose* (format t "matched x~%")) x)
-			     (x)       => ((when *verbose* (format t "matched (x)~%"))
-					   (list x))
-			     (x y)     => ((when *verbose* (format t "matched (x y)~%"))
-					   (list x y))
-			     (x . y)   => ((when *verbose* (format t "matched (x . y)~%"))
-					   (list x y))
-			     T => (error "Something is wrong with letmatch"))
+	(with alist = '((:a 1) (:b 2) (:c 3))
+	      tree  = '(+ (* 3 (+ 4 (/ 13 2)) 5) 14 (/ (- 23 (* 2 (+ 1 2))) 3))
+	      match =  (letmatch alist
+			 () => (error "~a not supposed to be empty!" alist)
+			 x  => ((when *verbose* (format t "matched x~%")) x)
+			 (x)       => ((when *verbose* (format t "matched (x)~%"))
+				       (list x))
+			 (x y)     => ((when *verbose* (format t "matched (x y)~%"))
+				       (list x y))
+			 (x . y)   => ((when *verbose* (format t "matched (x . y)~%"))
+				       (list x y))
+			 T => (error "Something is wrong with letmatch"))
 		   
-		  match2 = (letmatch alist
-			     () => (error "~a not supposed to be empty!" alist)
-			     (x)       => ((when *verbose* (format t "matched (x)~%"))
-					   (list x))
-			     (x y)     => ((when *verbose* (format t "matched (x y)~%"))
-					   (list x y))
-			     (x y z)   => ((when *verbose* (format t "matched (x y z)~%"))
-					   (list x y z))
-			     (x y z w) => ((when *verbose* (format t "matched (x y z w)~%"))
-					   (list x y z w))
-			     (x . y)   => ((when *verbose* (format t "matched (x . y)~%"))
-					   (list x y))
-			     T => (error "Something is wrong with letmatch"))
-		   
+	      match2 = (letmatch alist
+			 () => (error "~a not supposed to be empty!" alist)
+			 (x)       => ((when *verbose* (format t "matched (x)~%"))
+				       (list x))
+			 (x y)     => ((when *verbose* (format t "matched (x y)~%"))
+				       (list x y))
+			 (x y z)   => ((when *verbose* (format t "matched (x y z)~%"))
+				       (list x y z))
+			 (x y z w) => ((when *verbose* (format t "matched (x y z w)~%"))
+				       (list x y z w))
+			 (x . y)   => ((when *verbose* (format t "matched (x . y)~%"))
+				       (list x y))
+			 T => (error "Something is wrong with letmatch"))
+	      
 	
-		  match3 = (letmatch tree
-			     () => (error "~a not supposed to be empty!" tree)
-			     (x) => ((when *verbose* (format t "matched x~%")) x)
-			     (_ (y z _ _) a (_ _ d)) => (list y z a d)
-			     (x . y) => ((when *verbose* (format t "matched (x . y)~%"))
-					 (list x y))
-			     T => (error "Something is wrong with letmatch"))
-	
-		  (when *verbose* (format t "match  = ~a~%" match))
-		  (when *verbose* (format t "match2 = ~a~%" match2))
-		  (when *verbose* (format t "match3 = ~a~%" match3))
-		  (when *verbose* (format t "(eval match3) = ~a~%" (eval match3)))
-		  (assert (= 3 (length match)))
-		  (assert (= 3 (length match2)))
-		  (assert (= 4 (length match3)))
-		  (assert (= 126 (eval match3)))
-		  (when *verbose* (format t "Letmatch seems to be working~%")))
+	      match3 = (letmatch tree
+			 () => (error "~a not supposed to be empty!" tree)
+			 (x) => ((when *verbose* (format t "matched x~%")) x)
+			 (_ (y z _ _) a (_ _ d)) => (list y z a d)
+			 (x . y) => ((when *verbose* (format t "matched (x . y)~%"))
+				     (list x y))
+			 T => (error "Something is wrong with letmatch"))
+	      
+	      (when *verbose* (format t "match  = ~a~%" match))
+	      (when *verbose* (format t "match2 = ~a~%" match2))
+	      (when *verbose* (format t "match3 = ~a~%" match3))
+	      (when *verbose* (format t "(eval match3) = ~a~%" (eval match3)))
+	      (assert (= 3 (length match)))
+	      (assert (= 3 (length match2)))
+	      (assert (= 4 (length match3)))
+	      (assert (= 126 (eval match3)))
+	      (when *verbose* (format t "Letmatch seems to be working~%")))
 	
 	(assert (= x 60))
 	(with x being 42
@@ -374,7 +386,7 @@
 			  (assert (= y 42))
 			  (assert (= z 0)))))
 	(assert (= x 60))
-	; Letfun- does not accept symbols as left-hand sides
+        ; Letfun- does not accept symbols as left-hand sides
 	(assert (equal (macroexpand '(letfun- = = 3))
 		       '(progn = = 3)))
 	; No right-hand side means no binding, "tokens" belong to body
