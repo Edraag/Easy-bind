@@ -22,12 +22,6 @@ reduced syntax.
 
 Easy-bind is available from Quicklisp: (ql:quickload :easy-bind)
 
-Note that the version available on Quicklisp as of December 2018 does not recognize the letval
-macro - multi-let must be used instead (it is identical except for the name). It also does not
-recognize the :all or :sym keywords in let+/with forms, or the `being' synonym for the equals
-sign in with forms. Finally, it does not include the define-binding-form macro for easily defining
-new binding forms.
-
 All names belong to the package edraag.easy-bind, which has nicknames easy-bind and eb. To use the
 provided binding forms, after loading Easy-bind either do (use-package :easy-bind) or prefix each
 name with eb:<name>.

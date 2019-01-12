@@ -181,7 +181,7 @@
 				       (nconc (qsort (remove-if #'filter xs))
 					      (list p)
 					      (qsort (remove-if-not #'filter xs)))))
-		   
+		
 		second-random-list = (random-list 10 100)
 		second-sorted-list = (qsort second-random-list)
 		   
@@ -260,8 +260,8 @@
 		(assert (= sum-list (reduce '+ sorted-list)))
 		
 		(letfun (square x) = 
-			((when *verbose* (format t "Inner square now...~%")
-			       (format t "Not actually squaring ~d...~%" x))
+			((when *verbose* (format t "Inner square now...~%"))
+			 (when *verbose* (format t "Not actually squaring ~d...~%" x))
 			 x)
 			(assert (= (square 2) 2))
 			(assert (= x 60)))
