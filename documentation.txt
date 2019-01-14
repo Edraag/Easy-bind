@@ -299,8 +299,8 @@ will then be interpreted as a single form. The same applies if the first form is
 Any lambda list that can be used with labels can be used:
 
     (letfun (add &rest args) = (apply #'+ args)
-	     x = 7 y = 9
-	     (add x y))
+            x = 7 y = 9
+            (add x y))
 
 Note that mutually recursive functions must not have any variable bindings in between their 
 definitions, as this will cause two extra scopes to be nested, so that the first function will not
@@ -321,12 +321,12 @@ in that it binds its local functions in parallel.
 LETMACRO works like letfun but expands into let* and macrolet forms. Example:
 
     (letmacro (square x) =
-	         (let+ g = (gensym)
-		   `(let+ ,g = ,x
-		     (* ,g ,g)))
-	    x = 5
-	    (square x))
-		
+              (let+ g = (gensym)
+                    `(let+ ,g = ,x
+                           (* ,g ,g)))
+              x = 5
+              (square x))
+
 macroexpands to:
 
     (MACROLET ((SQUARE (X)

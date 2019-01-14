@@ -225,7 +225,7 @@
 			 (g x) = (f x)
 			 (square x) = (with square being (* x x)
 					    (when *verbose*
-					      (format t "Another square function... ~%" )
+					      (format t "Another square function... ~%")
 					      (format t "(square ~a) = ~a ~%" x square))
 					      square)
 			 (assert (= 300 (f 3)))
@@ -271,12 +271,13 @@
 		(assert (= sum-list (reduce '+ sorted-list)))
 		(assert (= maxlist last-elt))
 		
-		(letfun (square x) = 
-			((when *verbose* (format t "Inner square now...~%"))
-			 (when *verbose* (format t "Not actually squaring ~d...~%" x))
-			 x)
-			(assert (= (square 2) 2))
-			(assert (= x 60)))
+		(letfun
+		 (square x) = 
+		 ((when *verbose* (format t "Inner square now...~%"))
+		  (when *verbose* (format t "Not actually squaring ~d...~%" x))
+		  x)
+		 (assert (= (square 2) 2))
+		 (assert (= x 60)))
 		(assert (= (square 2) 4))
 		(assert (= x 60))
 		(when *verbose* 
@@ -287,9 +288,10 @@
 		  (with g = (gensym)
 			`(let- ,g = ,x
 			       (* ,g ,g)))
-		  (macro-add &rest args) = ((format t "~%Making an addition form...~%")
-					    (format t "This should be printed at compile time...~%")
-					    `(+ ,@args))
+		  (macro-add &rest args) = 
+		  ((format t "~%Making an addition form...~%")
+		   (format t "This should be printed at compile time...~%")
+		   `(+ ,@args))
 		  x = 5
 		  y = (macro-square (macro-add x s))
 		  
@@ -323,7 +325,7 @@
 		  (assert (= 17/2 avg))
 		  (when *verbose* (format t "Letsym seems "))
 		  (when *verbose* (format t "to be "))
-		  (when *verbose* (format t "working if x, y, z expanded.~%" )))
+		  (when *verbose* (format t "working if x, y, z expanded.~%")))
 	
 	(with alist = '((:a 1) (:b 2) (:c 3))
 	      tree  = '(+ (* 3 (+ 4 (/ 13 2)) 5) 14 (/ (- 23 (* 2 (+ 1 2))) 3))
