@@ -163,10 +163,12 @@ function-binding right-hand side (body)."
 bindings into a form or forms determined by complex-binding-collector, alternately 
 nested until binding list exhausted, at which point body is spliced into the 
 innermost form. Recognizes the :all keyword and handles bindings accordingly.
+
 Complex-binding-collector must be a function which takes the binding list as 
 argument and returns 3 values: 1) a form-name (a symbol), 2) a list of bindings to 
 give to the form, 3) the number of successive bindings it lays claim to from the 
-passed-in binding list."
+passed-in binding list. It may also return a 4th value: whether (default nil) to 
+splice the returned binding list into the generated form."
   (labels ((recur (bindings body) 
 	     (cond ((null bindings)
 		    body)
@@ -175,9 +177,9 @@ passed-in binding list."
 			   (count (length let-bindings)))
 		      `((let* ,let-bindings
 			  ,@(recur (nthcdr count bindings) body)))))
-		   ; Extra level of parens needed because body must be spliced in at the end of the recursion,
-		   ; so nested let* and other forms must also be spliced. Thus the outer fn returns the
-		   ; car of the list.
+		   ; Extra level of parens needed because body must be spliced in at the end of
+		   ; the recursion so nested let* and other forms must also be spliced. Thus the 
+		   ; outer fn returns the car of the list.
 		   ((all-keyword-p (caaar bindings))
 		    (setf (caar bindings) (cdaar bindings))
 		    (destructuring-bind (x y) (car bindings)
@@ -188,14 +190,15 @@ passed-in binding list."
 				 (,value-list (make-list ,number :initial-element ,value)))
 			    (destructuring-bind ,x ,value-list
 			      ,@(recur (cdr bindings) body)))))))
-		    (t
-		     (multiple-value-bind (form-name complex-binding-list count)
-			 (funcall complex-binding-collector bindings)
-		       (if (search (symbol-name 'bind) (symbol-name form-name))
-			   `((,form-name ,@complex-binding-list
-					 ,@(recur (nthcdr count bindings) body)))
-			   `((,form-name ,complex-binding-list
-					 ,@(recur (nthcdr count bindings) body)))))))))
+		   (t
+		    (multiple-value-bind 
+			  (form-name complex-binding-list count splice-binding-list)
+			(funcall complex-binding-collector bindings)
+		      (if splice-binding-list
+			  `((,form-name ,@complex-binding-list
+					,@(recur (nthcdr count bindings) body)))
+			  `((,form-name ,complex-binding-list
+					,@(recur (nthcdr count bindings) body)))))))))
     (car (recur bindings body))))
 
 (defun let+-collect-function-bindings (bindings keyword-predicate)
@@ -214,7 +217,8 @@ forms like labels and macrolet. Collects bindings only as long as they satisfy p
   "Complex-binding-collector to be passed to generate-let*s-and-complex-bindings when
 generating a let+-style binding form. As such it returns 3 values: a form-name (symbol),
 a binding list, and the number of binding pairs from the passed-in binding list it lays
-claim to."
+claim to. It may also returned a 4th value T to indicate that the returned binding list
+should be spliced into the generated form."
   (let ((first-symbol (caaar bindings)))
     (cond
       ((function-keyword-p first-symbol)
@@ -229,7 +233,7 @@ claim to."
       
       ((values-keyword-p first-symbol)
        (setf (caar bindings) (cdaar bindings))
-       (values 'multiple-value-bind (car bindings) 1))
+       (values 'multiple-value-bind (car bindings) 1 t))
       
       ((sym-keyword-p first-symbol)
        (setf (caar bindings) (cdaar bindings))
@@ -237,7 +241,7 @@ claim to."
 	      (generate-symbol-macrolet-bindings (list (car bindings)))))
 	 (values 'symbol-macrolet symbol-macrolet-bindings 1)))
       (t
-       (values 'destructuring-bind (car bindings) 1)))))
+       (values 'destructuring-bind (car bindings) 1 t)))))
 
 (defun generate-let*s-and-function-bindings (bindings body form-name)
   "Used to create a form-generator for generating nested let* and <form-name>
@@ -265,7 +269,7 @@ bindings, such as labels or macrolet."
 (defun generate-let*s-and-multiple-value-binds (bindings body)
   (generate-let*s-and-complex-bindings bindings body
 				       (lambda (bindings)
-					 (values 'multiple-value-bind (car bindings) 1))))
+					 (values 'multiple-value-bind (car bindings) 1 t))))
 
 ;; ----------- Binding macros -----------
 

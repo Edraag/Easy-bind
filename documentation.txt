@@ -552,17 +552,14 @@ signature is:
 where bindings and body must be passed on from the form-generator. Complex-binding-collector must
 be a function which takes the binding list as argument and returns 3 values: 1) a form-name (a 
 symbol), 2) a list of bindings to give to the form, 3) the number of successive bindings it lays
-claim to from the passed-in binding list. Generate-let*s-and-complex-bindings recognizes the :all 
-keyword, so the passed-in function will only be called to handle complex bindings that do not have 
-the :all keyword in the car position. 
+claim to from the passed-in binding list. It may also return a fourth boolean value indicating
+whether the returned list of bindings should be spliced into the generated binding form so that it
+loses its surrounding list - by default it is copied in unaltered. T as fourth return value will
+cause it to be spliced. This is needed if the generated form is destructuring-bind, multiple-
+value-bind, or another form with similar syntax.
 
-Generate-let*s-and-complex-bindings makes two assumptions about the binding form(s) that it will 
-create based on the form-name symbol returned from its complex-binding-collector: 1) that if the 
-symbol-name includes the character sequence "bind", it will have the syntax of multiple-value-bind
-and destructuring-bind, and 2) that it otherwise will have the syntax of let, flet, labels etc. 
-In the first case the binding list for the form is expected to contain a single pair which will be 
-spliced into the form so that it does not have a surrounding list. In the second case the binding 
-list will be copied into the generated form unaltered.
+Generate-let*s-and-complex-bindings recognizes the :all keyword, so the passed-in function will 
+only be called to handle complex bindings that do not have the :all keyword in the car position. 
 
 Let+ and with are defined with the form-generator eb::generate-let+-expansion, which passes the
 function eb::collect-let+-complex-bindings to eb::generate-let*s-and-complex-bindings. 

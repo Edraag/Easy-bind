@@ -122,3 +122,13 @@
   (with (:fun f y) = (/ (+ y (/ x y)) 2)
 	(fixed-point #'f 1.0)))
 
+;; ------- Tail-recursive factorial -------
+
+(defun fact (n)
+  (letfun
+   (iter product counter) =
+   (if (> counter n)
+       product
+       (iter (* counter product)
+	     (+ counter 1)))
+   (iter 1 1)))
