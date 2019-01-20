@@ -103,18 +103,17 @@ only as long as a, c, ... satisfies predicate."
 (defun generate-symbol-macrolet-bindings (bindings)
   (loop for (left right) in bindings
      with collected = ()
-     do 
-       (progn (when (symbolp left)
-		(push (list left right) collected))
-	      (when (consp left)
-		(if (null (rest left))
-		    (push (list (first left) right) collected)
-		    (if (and (consp right)
-			     (= (length left) (length right)))
-			(loop for i in left
-			   for j in right
-			   do (push (list i j) collected))
-			(error "Malformed right-hand side in symbol-macro binding")))))
+     when (symbolp left)
+     do (push (list left right) collected)
+     when (consp left)
+     do (if (null (rest left))
+	    (push (list (first left) right) collected)
+	    (if (and (consp right)
+		     (= (length left) (length right)))
+		(loop for i in left
+		   for j in right
+		   do (push (list i j) collected))
+		(error "Malformed right-hand side in symbol-macro binding")))
      finally (return (nreverse collected))))
 
 (defun function-bindings-splice-implicit-progn (bindings)
