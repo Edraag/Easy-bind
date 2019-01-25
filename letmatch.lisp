@@ -62,11 +62,11 @@ predicate."
 arguments to letmatch."
   (loop for form in forms collect
        (with (x . z) = form
-	 (if (and (consp (car z))
-		  (consp (caar z))
-		  (not (eq (caaar z) 'lambda)))
-	     (list* x (car z))
-	     form))))
+	     (if (and (consp (car z))
+		      (consp (caar z))
+		      (not (eq (caaar z) 'lambda)))
+		 (list* x (car z))
+		 form))))
 
 (defun letmatch-body-check-wellformedness (forms)
   (loop with count = 0
@@ -87,18 +87,18 @@ right-hand form becoming the body of the let+ form."
 					     #'simple-or-complex-left-hand-side-p
 					     #'consequent-sign-p)
 	(setf cond-clauses (splice-implicit-progn cond-clauses))
-	`(cond ,@(loop for clause in cond-clauses
-		    collect (let+ car = (car clause)
-				  cdr = (cdr clause)
-				  ignorables = ()
-				  (setf car (map-leaves car #'ignorablep
-							   (lambda (x) (gensym (symbol-name x)))))
-				  (nmap-leaves car #'ignorablep (lambda (x) (push x ignorables)))
-				  (if (eq car t)
-				      `(t ,@cdr)
-				      `((matches ',car ,key-expr)
-					,(if car
-					     `(let+ ,car = ,key-expr 
-						    (declare (ignore ,@ignorables)) 
-						    ,@cdr)
-					     (car cdr)))))))))
+	`(cond ,@(loop for clause in cond-clauses collecting
+		      (let+ car = (car clause)
+			    cdr = (cdr clause)
+			    ignorables = ()
+			    (setf car (map-leaves car #'ignorablep
+						  (lambda (x) (gensym (symbol-name x)))))
+			    (nmap-leaves car #'ignorablep (lambda (x) (push x ignorables)))
+			    (if (eq car t)
+				`(t ,@cdr)
+				`((matches ',car ,key-expr)
+				  ,(if car
+				       `(let+ ,car = ,key-expr 
+					      (declare (ignore ,@ignorables)) 
+					      ,@cdr)
+				       (car cdr)))))))))
